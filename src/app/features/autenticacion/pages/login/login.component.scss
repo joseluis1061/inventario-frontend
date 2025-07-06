@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:host {
+  display: block;
+  height: 100vh;
+  overflow: auto;
+}
+
+// Animaciones suaves
+@layer components {
+  .fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  .slide-up {
+    animation: slideUp 0.4s ease-out;
+  }
+
+  .transition-default {
+    @apply transition-all duration-200 ease-in-out;
+  }
+}
+
+// Keyframes
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Mejoras visuales
+.bg-gradient-to-br {
+  background-image: linear-gradient(to bottom right,
+    theme('colors.primary.50'),
+    theme('colors.white'),
+    theme('colors.secondary.50')
+  );
+}
+
+// Efectos de vidrio
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+}
+
+// Estados hover mejorados
+button:hover, a:hover {
+  transform: translateY(-1px);
+}
+
+button:active, a:active {
+  transform: translateY(0);
+}
+
+// Responsive
+@media (max-width: 640px) {
+  .min-h-screen {
+    min-height: 100vh;
+    min-height: 100dvh; // Dynamic viewport height
+  }
+
+  main {
+    padding: 1rem;
+  }
+
+  .rounded-2xl {
+    @apply rounded-xl;
+  }
+}
+
+// Mejoras de accesibilidad
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Loading overlay específico
+.loading-overlay {
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+// Focus states mejorados
+:focus-visible {
+  @apply outline-2 outline-primary-500 outline-offset-2;
+}

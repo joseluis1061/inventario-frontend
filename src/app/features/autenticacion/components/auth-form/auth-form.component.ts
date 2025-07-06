@@ -203,7 +203,7 @@ export class AuthFormComponent implements OnInit {
    * Navegar a forgot password
    */
   goToForgotPassword(): void {
-    this.router.navigate(['/login/forgot-password']);
+    this.router.navigate(['/auth/forgot-password']);
   }
 
   /**

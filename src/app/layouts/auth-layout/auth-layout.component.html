@@ -1,0 +1,59 @@
+<div class="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
+
+      <!-- Header fijo -->
+      <header class="bg-white/80 backdrop-blur-sm border-b border-neutral-200/50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="flex justify-between items-center h-16">
+            <!-- Logo y Brand -->
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4zM18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z"/>
+                </svg>
+              </div>
+              <div>
+                <h1 class="text-xl font-bold text-neutral-900">Sistema de Inventario</h1>
+                <p class="text-xs text-neutral-600">Gestión empresarial</p>
+              </div>
+            </div>
+
+            <!-- Links de ayuda -->
+            <div class="flex items-center space-x-4">
+              <a href="#" class="text-neutral-600 hover:text-primary-600 transition-all duration-200 text-sm flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Ayuda</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main content area -->
+      <main class="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div class="w-full max-w-md">
+          <!-- Outlet para páginas de auth -->
+          <router-outlet></router-outlet>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer class="bg-white/50 backdrop-blur-sm border-t border-neutral-200/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div class="text-center space-y-3">
+            <!-- Links de políticas -->
+            <div class="flex justify-center space-x-6 text-sm text-neutral-600">
+              <a href="#" class="hover:text-primary-600 transition-all duration-200">Términos de uso</a>
+              <a href="#" class="hover:text-primary-600 transition-all duration-200">Privacidad</a>
+              <a href="#" class="hover:text-primary-600 transition-all duration-200">Soporte</a>
+            </div>
+
+            <!-- Copyright -->
+            <p class="text-xs text-neutral-500">
+              &copy; {{ getCurrentYear() }} Sistema de Inventario. Todos los derechos reservados.
+            </p>
+          </div>
+        </div>
+      </footer>
+    </div>

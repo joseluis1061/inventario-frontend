@@ -9,11 +9,33 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
 
-  // Rutas públicas (solo si NO está autenticado)
+  // ✅ Rutas de autenticación con AuthLayout
+  {
+    path: 'auth',
+    loadComponent: () => import('./layouts/auth-layout/auth-layout.component').then(m => m.AuthLayoutComponent),
+    canActivate: [noAuthGuard],
+    children: [
+      {
+        path: '',
+        redirectTo: 'login',
+        pathMatch: 'full'
+      },
+      {
+        path: 'login',
+        loadComponent: () => import('./features/autenticacion/pages/login/login.component').then(m => m.LoginComponent)
+      },
+      {
+        path: 'forgot-password',
+        loadComponent: () => import('./features/autenticacion/pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+      }
+    ]
+  },
+
+  // ✅ Ruta de login directa (redirect a auth/login)
   {
     path: 'login',
-    loadChildren: () => import('./features/autenticacion/autenticacion.routes').then(m => m.AUTENTICACION_ROUTES),
-    canActivate: [noAuthGuard]
+    redirectTo: '/auth/login',
+    pathMatch: 'full'
   },
 
   // Dashboard (requiere autenticación)
@@ -23,34 +45,9 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
 
-  // Usuarios (solo administradores)
-  // {
-  //   path: 'usuarios',
-  //   loadChildren: () => import('./features/usuarios/usuarios.routes').then(m => m.USUARIOS_ROUTES),
-  //   canActivate: [authGuard, adminGuard]
-  // },
-
-  // Reportes (gerentes o superior)
-  // {
-  //   path: 'reportes',
-  //   loadChildren: () => import('./features/reportes/reportes.routes').then(m => m.REPORTES_ROUTES),
-  //   canActivate: [authGuard, managerGuard]
-  // },
-
-  // Productos (usando roleGuard con múltiples roles)
-  // {
-  //   path: 'productos',
-  //   loadChildren: () => import('./features/productos/productos.routes').then(m => m.PRODUCTOS_ROUTES),
-  //   canActivate: [authGuard, roleGuard],
-  //   data: {
-  //     roles: ['ADMIN', 'GERENTE'],
-  //     requireAll: false // Al menos uno de los roles
-  //   }
-  // },
-
   // Wildcard route
   {
     path: '**',
-    redirectTo: '/dashboard'
+    redirectTo: '/auth/login'
   }
 ];

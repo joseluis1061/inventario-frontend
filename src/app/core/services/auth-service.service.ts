@@ -232,4 +232,35 @@ export class AuthService {
       }
     }
   }
+
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/forgot-password`, { email })
+      .pipe(
+        tap(() => {
+          this.notificationService.success(
+            `Enlace de recuperación enviado a ${email}`,
+            'Email Enviado'
+          );
+        }),
+        catchError(error => {
+          this.handleForgotPasswordError(error);
+          return throwError(() => error);
+        })
+      );
+  }
+
+  /**
+  * Manejar errores de forgot password
+  */
+  private handleForgotPasswordError(error: any): void {
+    let errorMessage = 'Error al enviar enlace de recuperación';
+
+    if (error?.status === 404) {
+      errorMessage = 'No existe una cuenta con este correo';
+    } else if (error?.status === 429) {
+      errorMessage = 'Demasiados intentos. Espera unos minutos.';
+    }
+
+    this.notificationService.error(errorMessage, 'Error de Recuperación');
+  }
 }
