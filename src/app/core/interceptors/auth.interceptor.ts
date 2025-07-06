@@ -1,8 +1,9 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth-service.service';
+import { NotificationService } from '../../core/services/notification.service';
 
 /**
  * Interceptor funcional para manejo de autenticación JWT
@@ -11,6 +12,7 @@ import { AuthService } from '../services/auth-service.service';
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const notificationService = inject(NotificationService);
 
   // URLs que no requieren token
   const publicUrls = [
@@ -31,7 +33,8 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
   const accessToken = authService.getAccessToken();
 
   if (!accessToken) {
-    // Si no hay token, redirigir a login
+    // Si no hay token, mostrar notificación y redirigir a login
+    notificationService.warning('Debes iniciar sesión para acceder', 'Sesión Requerida');
     router.navigate(['/login']);
     return throwError(() => new Error('No access token available'));
   }
@@ -42,7 +45,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
   // Procesar request con manejo de errores
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      return handleHttpError(error, authService, router, req, next);
+      return handleHttpError(error, authService, router, req, next, notificationService);
     })
   );
 };
@@ -67,17 +70,25 @@ function handleHttpError(
   authService: AuthService,
   router: Router,
   originalReq: HttpRequest<any>,
-  next: HttpHandlerFn
+  next: HttpHandlerFn,
+  notificationService: NotificationService
 ) {
   // Error 401 - Token expirado o inválido
   if (error.status === 401) {
-    return handle401Error(authService, router, originalReq, next);
+    return handle401Error(authService, router, originalReq, next, notificationService);
   }
 
   // Error 403 - Sin permisos
   if (error.status === 403) {
     console.warn('🚫 Acceso denegado - Sin permisos suficientes');
+    notificationService.permissionDenied();
     router.navigate(['/dashboard']); // Redirigir a página segura
+    return throwError(() => error);
+  }
+
+  // Error 429 - Rate limiting
+  if (error.status === 429) {
+    notificationService.warning('Demasiadas peticiones. Espera un momento antes de intentar nuevamente.', 'Límite Excedido');
     return throwError(() => error);
   }
 
@@ -92,13 +103,15 @@ function handle401Error(
   authService: AuthService,
   router: Router,
   originalReq: HttpRequest<any>,
-  next: HttpHandlerFn
+  next: HttpHandlerFn,
+  notificationService: NotificationService
 ) {
   const refreshToken = authService.getRefreshToken();
 
   if (!refreshToken) {
     // No hay refresh token, hacer logout
     console.warn('🔴 Token expirado sin refresh token disponible');
+    notificationService.sessionExpired();
     authService.logout().subscribe();
     router.navigate(['/login']);
     return throwError(() => new Error('Token expired - no refresh available'));
@@ -117,6 +130,7 @@ function handle401Error(
     catchError((refreshError) => {
       // Fallo al refrescar token, hacer logout
       console.error('❌ Error al refrescar token:', refreshError);
+      notificationService.sessionExpired();
       authService.logout().subscribe();
       router.navigate(['/login']);
       return throwError(() => refreshError);

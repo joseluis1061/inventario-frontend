@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Componentes reutilizables
+@layer components {
+
+  // Input field base
+  .input-field {
+    @apply transition-all duration-200 ease-in-out;
+    @apply placeholder-neutral-400 text-neutral-900;
+
+    &:hover {
+      @apply border-neutral-400;
+    }
+
+    &:focus {
+      @apply outline-none;
+    }
+
+    &.error {
+      @apply border-status-error-500 ring-2 ring-status-error-200;
+    }
+  }
+
+  // Checkbox personalizado
+  .checkbox-field {
+    @apply transition-all duration-200 ease-in-out;
+    @apply cursor-pointer;
+
+    &:checked {
+      @apply bg-primary-600 border-primary-600;
+    }
+
+    &:focus {
+      @apply outline-none ring-2 ring-primary-500 ring-offset-2;
+    }
+
+    &:hover {
+      @apply border-primary-400;
+    }
+  }
+
+  // Botón principal
+  .btn-primary {
+    @apply transition-all duration-200 ease-in-out;
+    @apply font-medium text-base;
+    @apply focus:outline-none;
+
+    &:hover:not(:disabled) {
+      @apply transform translate-y-[-1px];
+    }
+
+    &:active:not(:disabled) {
+      @apply transform translate-y-0;
+    }
+
+    &:disabled {
+      @apply opacity-60 cursor-not-allowed;
+      @apply transform-none shadow-none;
+    }
+  }
+
+  // Spinner
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+}
+
+// Animaciones
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+
+  .transition-default {
+    @apply transition-all duration-200 ease-in-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Estados de focus y interacción
+.input-field:focus-within {
+  @apply ring-2 ring-primary-500 border-primary-500;
+}
+
+// Responsive
+@media (max-width: 640px) {
+  :host {
+    padding: 1rem;
+  }
+
+  .btn-primary {
+    @apply h-14 text-lg;
+  }
+
+  .input-field {
+    @apply py-4 text-base;
+  }
+}
+
+// Mejoras de accesibilidad
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Dark mode (preparado para el futuro)
+@media (prefers-color-scheme: dark) {
+  // Estilos para modo oscuro cuando se implemente
+}
+
+// Estados de error mejorados
+.input-field.error {
+  @apply border-status-error-500 ring-status-error-200;
+
+  &:focus {
+    @apply border-status-error-600 ring-status-error-300;
+  }
+}
+
+// Efectos de hover mejorados
+button:hover:not(:disabled) {
+  @apply transform translate-y-[-1px];
+}
+
+button:active:not(:disabled) {
+  @apply transform translate-y-0;
+}
+
+// Loading state
+.loading {
+  @apply pointer-events-none opacity-70;
+}

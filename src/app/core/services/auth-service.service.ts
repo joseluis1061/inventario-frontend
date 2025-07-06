@@ -1,8 +1,9 @@
 import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { LoginRequest, LoginResponse, UserInfo } from '../models';
+import { NotificationService } from '../../core/services/notification.service';
 
 @Injectable({
   providedIn: 'root'
@@ -10,6 +11,7 @@ import { LoginRequest, LoginResponse, UserInfo } from '../models';
 export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/api/auth`;
   private readonly http = inject(HttpClient);
+  private readonly notificationService = inject(NotificationService);
 
   // Estado de autenticación
   private currentUserSubject = new BehaviorSubject<UserInfo | null>(null);
@@ -33,6 +35,10 @@ export class AuthService {
           if (response.success) {
             this.handleLoginSuccess(response);
           }
+        }),
+        catchError(error => {
+          this.handleLoginError(error);
+          return throwError(() => error);
         })
       );
   }
@@ -45,6 +51,12 @@ export class AuthService {
       .pipe(
         tap(() => {
           this.handleLogout();
+        }),
+        catchError(error => {
+          // Aunque falle el logout en el servidor, limpiar localmente
+          this.handleLogout();
+          this.notificationService.warning('Sesión cerrada localmente', 'Logout');
+          return throwError(() => error);
         })
       );
   }
@@ -58,8 +70,12 @@ export class AuthService {
       .pipe(
         tap(response => {
           if (response.success) {
-            this.handleLoginSuccess(response);
+            this.handleTokenRefresh(response);
           }
+        }),
+        catchError(error => {
+          this.handleRefreshError(error);
+          return throwError(() => error);
         })
       );
   }
@@ -126,9 +142,35 @@ export class AuthService {
     // Actualizar estado
     this.currentUserSubject.next(response.user);
     this.isAuthenticatedSubject.next(true);
+
+    // Notificar éxito
+    this.notificationService.loginSuccess(response.user.nombreCompleto);
+  }
+
+  private handleLoginError(error: any): void {
+    console.error('❌ Error en login:', error);
+
+    let errorMessage = 'Error inesperado. Intenta nuevamente.';
+
+    if (error?.status === 401) {
+      errorMessage = 'Usuario o contraseña incorrectos';
+    } else if (error?.status === 403) {
+      errorMessage = 'Cuenta desactivada. Contacta al administrador.';
+    } else if (error?.status === 429) {
+      errorMessage = 'Demasiados intentos. Espera unos minutos.';
+    } else if (error?.status === 0) {
+      errorMessage = 'Error de conexión. Verifica tu internet.';
+    } else if (error?.userMessage) {
+      errorMessage = error.userMessage;
+    }
+
+    // Notificar error
+    this.notificationService.loginError(errorMessage);
   }
 
   private handleLogout(): void {
+    const user = this.getCurrentUser();
+
     // Limpiar storage
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -137,6 +179,38 @@ export class AuthService {
     // Actualizar estado
     this.currentUserSubject.next(null);
     this.isAuthenticatedSubject.next(false);
+
+    // Notificar logout
+    if (user) {
+      this.notificationService.logoutSuccess();
+    }
+  }
+
+  private handleTokenRefresh(response: LoginResponse): void {
+    // Actualizar tokens
+    localStorage.setItem('accessToken', response.accessToken);
+    if (response.refreshToken) {
+      localStorage.setItem('refreshToken', response.refreshToken);
+    }
+
+    // Actualizar info de usuario si viene en la respuesta
+    if (response.user) {
+      localStorage.setItem('userInfo', JSON.stringify(response.user));
+      this.currentUserSubject.next(response.user);
+    }
+
+    console.log('🔄 Token refrescado exitosamente');
+    // No mostrar notificación para refresh automático (sería molesto)
+  }
+
+  private handleRefreshError(error: any): void {
+    console.error('❌ Error al refrescar token:', error);
+
+    // Token refresh falló, hacer logout
+    this.handleLogout();
+
+    // Notificar sesión expirada
+    this.notificationService.sessionExpired();
   }
 
   private checkStoredAuth(): void {
@@ -148,9 +222,13 @@ export class AuthService {
         const user: UserInfo = JSON.parse(userInfo);
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
+
+        // Notificación silenciosa de sesión restaurada
+        console.log(`🔐 Sesión restaurada para: ${user.nombreCompleto}`);
       } catch (error) {
         console.error('Error parsing stored user info:', error);
         this.handleLogout();
+        this.notificationService.error('Error al restaurar sesión. Inicia sesión nuevamente.', 'Sesión Inválida');
       }
     }
   }

@@ -12,7 +12,8 @@ export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   // URLs que no deben mostrar loading
   const skipLoadingUrls = [
     '/api/auth/refresh',
-    '/api/health'
+    '/api/health',
+    '/api/auth/logout' // Logout debe ser rápido
   ];
 
   const shouldSkipLoading = skipLoadingUrls.some(url => req.url.includes(url));

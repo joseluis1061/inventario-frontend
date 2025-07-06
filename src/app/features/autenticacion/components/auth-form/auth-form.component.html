@@ -1,1 +1,154 @@
-<p>auth-form works!</p>
+<div class="w-full max-w-md mx-auto">
+  <!-- Header del formulario -->
+  <div class="text-center mb-8">
+    <h1 class="text-3xl font-bold text-neutral-900 mb-2">
+      Iniciar Sesión
+    </h1>
+    <p class="text-neutral-600">
+      Ingresa tus credenciales para acceder al sistema
+    </p>
+  </div>
+
+  <!-- Mensaje de error global -->
+  @if (loginError()) {
+    <div class="mb-6 p-4 bg-status-error-50 border border-status-error-200 rounded-lg animate-fade-in">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-status-error-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span class="text-status-error-700 text-sm font-medium">{{ loginError() }}</span>
+      </div>
+    </div>
+  }
+
+  <!-- Formulario -->
+  <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+    <!-- Campo Usuario -->
+    <div class="space-y-2">
+      <label for="username" class="block text-sm font-medium text-neutral-700">
+        Usuario
+      </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-5 w-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          placeholder="Ingresa tu usuario"
+          autocomplete="username"
+          (input)="onFieldInput()"
+          class="input-field w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-default"
+          [class.border-status-error-500]="hasFieldError('username')"
+          [class.ring-status-error-200]="hasFieldError('username')"
+          cdkTrapFocus
+        />
+      </div>
+      @if (hasFieldError('username')) {
+        <p class="text-sm text-status-error-600 mt-1 animate-fade-in">
+          {{ getFieldError('username') }}
+        </p>
+      }
+    </div>
+
+    <!-- Campo Contraseña -->
+    <div class="space-y-2">
+      <label for="password" class="block text-sm font-medium text-neutral-700">
+        Contraseña
+      </label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg class="h-5 w-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <input
+          id="password"
+          [type]="showPassword() ? 'text' : 'password'"
+          formControlName="password"
+          placeholder="Ingresa tu contraseña"
+          autocomplete="current-password"
+          (input)="onFieldInput()"
+          class="input-field w-full pl-10 pr-12 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-default"
+          [class.border-status-error-500]="hasFieldError('password')"
+          [class.ring-status-error-200]="hasFieldError('password')"
+        />
+        <button
+          type="button"
+          (click)="togglePasswordVisibility()"
+          class="absolute inset-y-0 right-0 pr-3 flex items-center text-neutral-400 hover:text-neutral-600 transition-default"
+          [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+        >
+          @if (showPassword()) {
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"/>
+            </svg>
+          } @else {
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          }
+        </button>
+      </div>
+      @if (hasFieldError('password')) {
+        <p class="text-sm text-status-error-600 mt-1 animate-fade-in">
+          {{ getFieldError('password') }}
+        </p>
+      }
+    </div>
+
+    <!-- Remember Me y Forgot Password -->
+    <div class="flex items-center justify-between">
+      <label class="flex items-center cursor-pointer">
+        <input
+          type="checkbox"
+          formControlName="rememberMe"
+          class="checkbox-field w-4 h-4 text-primary-600 bg-white border-neutral-300 rounded focus:ring-primary-500 focus:ring-2 transition-default"
+        />
+        <span class="ml-2 text-sm text-neutral-700">Recordarme</span>
+      </label>
+
+      <button
+        type="button"
+        (click)="goToForgotPassword()"
+        class="text-sm text-primary-600 hover:text-primary-700 transition-default underline-offset-4 hover:underline font-medium"
+      >
+        ¿Olvidaste tu contraseña?
+      </button>
+    </div>
+
+    <!-- Botón Submit -->
+    <button
+      type="submit"
+      class="btn-primary w-full h-12 px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-default shadow-sm hover:shadow-md focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+      [disabled]="isLoading() || loginForm.invalid"
+    >
+      @if (isLoading()) {
+        <div class="flex items-center justify-center space-x-2">
+          <div class="spinner w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          <span>Iniciando sesión...</span>
+        </div>
+      } @else {
+        <div class="flex items-center justify-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+          </svg>
+          <span>Iniciar Sesión</span>
+        </div>
+      }
+    </button>
+
+    <!-- Información adicional -->
+    <div class="text-center">
+      <p class="text-xs text-neutral-500">
+        Al iniciar sesión, aceptas nuestros términos de uso y política de privacidad.
+      </p>
+    </div>
+
+  </form>
+</div>
