@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
 
 import { CategoriasService } from '../../../../core/services/categorias.service';
@@ -14,6 +15,7 @@ import { CategoriaResponse } from '../../../../core/models/categoria';
 })
 export class CategoriasComponent implements OnInit, OnDestroy {
   private readonly categoriasService = inject(CategoriasService);
+  private readonly router = inject(Router);
   private readonly destroy$ = new Subject<void>();
 
   // Signals para estado del componente
@@ -98,11 +100,10 @@ export class CategoriasComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Crear nueva categoría (placeholder)
+   * Navegar a crear nueva categoría
    */
   crearCategoria(): void {
-    // TODO: Implementar modal o navegación para crear categoría
-    console.log('🆕 Crear nueva categoría');
+    this.router.navigate(['/categorias/crear']);
   }
 
   /**
