@@ -1,0 +1,265 @@
+<!-- Header con título y botón crear -->
+<div class="page-header">
+  <div class="header-content">
+    <div class="header-left">
+      <h1 class="page-title">
+        <svg class="page-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a2 2 0 012-2z"/>
+        </svg>
+        Categorías
+      </h1>
+      <p class="page-description">
+        Gestiona las categorías de productos de tu inventario
+      </p>
+    </div>
+
+    <div class="header-actions">
+      <button
+        class="btn-primary"
+        (click)="crearCategoria()"
+        [disabled]="loadingStates().creating"
+      >
+        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Nueva Categoría
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Barra de búsqueda y filtros -->
+<div class="search-section">
+  <div class="search-container">
+    <div class="search-input-group">
+      <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Buscar categorías por nombre o descripción..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button class="clear-search" (click)="limpiarBusqueda()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      }
+    </div>
+
+    <button
+      class="btn-secondary"
+      (click)="refrescar()"
+      [disabled]="loadingStates().listing"
+      title="Refrescar lista"
+    >
+      <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" [class.animate-spin]="loadingStates().listing">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Refrescar
+    </button>
+  </div>
+</div>
+
+<!-- Indicador de carga -->
+@if (loadingStates().listing) {
+  <div class="loading-indicator">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <span>Cargando categorías...</span>
+    </div>
+  </div>
+}
+
+<!-- Lista de categorías -->
+<div class="categorias-container">
+  @if (categoriasFiltradas.length > 0) {
+    <!-- Grid de categorías -->
+    <div class="categorias-grid">
+      @for (categoria of categoriasFiltradas; track trackByCategoria($index, categoria)) {
+        <div class="categoria-card">
+          <!-- Header de la tarjeta -->
+          <div class="card-header">
+            <div class="categoria-info">
+              <div class="categoria-icon" [style.background-color]="categoria.colorSugerido + '20'">
+                <svg class="icon" [style.color]="categoria.colorSugerido" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  @switch (categoria.iconoSugerido) {
+                    @case ('smartphone') {
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a1 1 0 001-1V4a1 1 0 00-1-1H8a1 1 0 00-1 1v16a1 1 0 001 1z"/>
+                    }
+                    @case ('shirt') {
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m-8 0h8m-8 0L5 6v10a1 1 0 001 1h12a1 1 0 001-1V6l-4-2"/>
+                    }
+                    @default {
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a2 2 0 012-2z"/>
+                    }
+                  }
+                </svg>
+              </div>
+
+              <div class="categoria-details">
+                <h3 class="categoria-nombre">{{ categoria.nombre }}</h3>
+                <p class="categoria-descripcion">{{ categoria.descripcion }}</p>
+              </div>
+            </div>
+
+            <div class="categoria-badges">
+              @if (categoria.esCategoriaComun) {
+                <span class="badge badge-comun">Sistema</span>
+              } @else {
+                <span class="badge badge-personalizada">Personalizada</span>
+              }
+            </div>
+          </div>
+
+          <!-- Métricas de la categoría -->
+          <div class="card-metrics">
+            <div class="metric">
+              <span class="metric-label">Estado:</span>
+              <span class="metric-value" [class]="getEstadoStockClass(categoria)">
+                {{ categoria.estadoTexto }}
+              </span>
+            </div>
+
+            <div class="metric">
+              <span class="metric-label">Stock Bajo:</span>
+              <span class="metric-value">{{ categoria.porcentajeStockBajo }}%</span>
+            </div>
+
+            <div class="metric">
+              <span class="metric-label">Con Stock:</span>
+              <span class="metric-value">{{ categoria.porcentajeConStock }}%</span>
+            </div>
+          </div>
+
+          <!-- Footer con fecha y acciones -->
+          <div class="card-footer">
+            <div class="fecha-creacion">
+              <svg class="fecha-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              {{ formatearFecha(categoria.fechaCreacion) }}
+            </div>
+
+            <div class="card-actions">
+              <button
+                class="btn-action btn-edit"
+                (click)="editarCategoria(categoria)"
+                [disabled]="loadingStates().updating"
+                title="Editar categoría"
+              >
+                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+
+              <button
+                class="btn-action btn-delete"
+                (click)="confirmarEliminar(categoria.id)"
+                [disabled]="!categoria.eliminable || loadingStates().deleting"
+                [title]="categoria.eliminable ? 'Eliminar categoría' : 'No se puede eliminar esta categoría'"
+              >
+                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (!loadingStates().listing) {
+    <!-- Estado vacío -->
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a2 2 0 012-2z"/>
+        </svg>
+      </div>
+
+      <h3 class="empty-title">
+        @if (searchTerm()) {
+          No se encontraron categorías
+        } @else {
+          No hay categorías registradas
+        }
+      </h3>
+
+      <p class="empty-description">
+        @if (searchTerm()) {
+          No hay categorías que coincidan con "{{ searchTerm() }}".
+          <button class="link-button" (click)="limpiarBusqueda()">Limpiar búsqueda</button>
+        } @else {
+          Comienza creando tu primera categoría para organizar tus productos.
+        }
+      </p>
+
+      @if (!searchTerm()) {
+        <button class="btn-primary" (click)="crearCategoria()">
+          <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          Crear Primera Categoría
+        </button>
+      }
+    </div>
+  }
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelarEliminar()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="modal-title">Confirmar Eliminación</h3>
+        <button class="modal-close" (click)="cancelarEliminar()">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <div class="warning-icon">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+          </svg>
+        </div>
+
+        <div class="warning-content">
+          <p class="warning-title">¿Estás seguro de que deseas eliminar esta categoría?</p>
+          <p class="warning-description">
+            Esta acción no se puede deshacer. Asegúrate de que no hay productos asociados a esta categoría.
+          </p>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button
+          class="btn-secondary"
+          (click)="cancelarEliminar()"
+          [disabled]="loadingStates().deleting"
+        >
+          Cancelar
+        </button>
+
+        <button
+          class="btn-danger"
+          (click)="eliminarCategoria(showDeleteConfirm()!)"
+          [disabled]="loadingStates().deleting"
+        >
+          @if (loadingStates().deleting) {
+            <div class="spinner-small"></div>
+            Eliminando...
+          } @else {
+            Eliminar Categoría
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

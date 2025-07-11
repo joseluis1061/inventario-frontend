@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, noAuthGuard } from './core/guards';
+import { CATEGORIAS_ROUTES } from './features/categorias/categorias.routes';
 
 export const routes: Routes = [
   // Redirect root
@@ -40,8 +41,11 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
+      },
+      {
+        path: 'categorias',
+        loadChildren: () => import('./features/categorias/categorias.routes').then(m => m.CATEGORIAS_ROUTES)
       }
-      // Aquí irán productos, categorías, movimientos, etc.
     ]
   },
 

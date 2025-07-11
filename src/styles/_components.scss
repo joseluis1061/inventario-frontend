@@ -1,0 +1,453 @@
+// ===== COMPONENTES BASE =====
+
+// PAGE HEADER
+.page-header {
+  background: white;
+  border-bottom: 1px solid $neutral-200;
+  padding: $spacing-xl $spacing-2xl;
+  margin-bottom: $spacing-2xl;
+
+  .header-content {
+    @include flex-between;
+    @include container-responsive;
+    align-items: flex-start;
+
+    @include mobile-only {
+      flex-direction: column;
+      gap: $spacing-lg;
+    }
+  }
+
+  .header-left {
+    flex: 1;
+  }
+
+  .page-title {
+    @include flex-start;
+    gap: $spacing-md;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $neutral-900;
+    margin: 0 0 $spacing-sm 0;
+
+    .page-icon {
+      width: $spacing-2xl;
+      height: $spacing-2xl;
+      color: $primary-color;
+    }
+  }
+
+  .page-description {
+    color: $neutral-600;
+    font-size: $font-size-base;
+    margin: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: $spacing-md;
+    align-items: center;
+
+    @include mobile-only {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}
+
+// SEARCH SECTION
+.search-section {
+  @include card-base;
+  padding: $spacing-xl;
+  margin-bottom: $spacing-2xl;
+  @include container-responsive;
+
+  .search-container {
+    display: flex;
+    gap: $spacing-lg;
+    align-items: center;
+
+    @include mobile-only {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .search-input-group {
+    position: relative;
+    flex: 1;
+    display: flex;
+    align-items: center;
+
+    .search-icon {
+      position: absolute;
+      left: $spacing-md;
+      width: 1.25rem;
+      height: 1.25rem;
+      color: $neutral-400;
+      z-index: 1;
+    }
+
+    .search-input {
+      @include input-base;
+      padding-left: 2.75rem;
+    }
+
+    .clear-search {
+      position: absolute;
+      right: $spacing-md;
+      width: 1.25rem;
+      height: 1.25rem;
+      @include flex-center;
+      color: $neutral-400;
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color $transition-default;
+
+      &:hover {
+        color: $neutral-600;
+      }
+
+      svg {
+        width: $spacing-lg;
+        height: $spacing-lg;
+      }
+    }
+  }
+}
+
+// LOADING INDICATOR
+.loading-indicator {
+  @include flex-center;
+  padding: $spacing-3xl;
+  @include card-base;
+  @include container-responsive;
+
+  .loading-content {
+    @include flex-center;
+    flex-direction: column;
+    gap: $spacing-lg;
+    color: $neutral-600;
+
+    .spinner {
+      @include spinner;
+    }
+  }
+}
+
+// GRID CONTAINERS
+.grid-container {
+  @include container-responsive;
+}
+
+.grid-responsive {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: $spacing-xl;
+
+  @include mobile-only {
+    grid-template-columns: 1fr;
+    gap: $spacing-lg;
+  }
+}
+
+// CARD BASE
+.card-base {
+  @include card-base;
+  @include card-hover;
+  overflow: hidden;
+
+  .card-header {
+    padding: $spacing-xl;
+    border-bottom: 1px solid $neutral-100;
+  }
+
+  .card-body {
+    padding: $spacing-lg $spacing-xl;
+  }
+
+  .card-footer {
+    @include flex-between;
+    padding: $spacing-lg $spacing-xl;
+    border-top: 1px solid $neutral-100;
+
+    @include mobile-only {
+      flex-direction: column;
+      gap: $spacing-md;
+      align-items: flex-start;
+
+      .card-actions {
+        align-self: flex-end;
+      }
+    }
+  }
+}
+
+// BADGES
+.badge {
+  padding: $spacing-xs $spacing-md;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  text-align: center;
+  white-space: nowrap;
+
+  &.badge-primary {
+    background: $primary-light;
+    color: $primary-color;
+  }
+
+  &.badge-secondary {
+    background: $neutral-100;
+    color: $neutral-700;
+  }
+
+  &.badge-success {
+    background: #d1fae5;
+    color: $success-color;
+  }
+
+  &.badge-warning {
+    background: #fef3c7;
+    color: $warning-color;
+  }
+
+  &.badge-danger {
+    background: #fee2e2;
+    color: $danger-color;
+  }
+}
+
+// BUTTONS
+.btn-primary {
+  @include btn-primary;
+}
+
+.btn-secondary {
+  @include btn-secondary;
+}
+
+.btn-danger {
+  @include btn-danger;
+}
+
+.btn-action {
+  padding: $spacing-sm;
+  border-radius: $radius-sm;
+  background: $neutral-100;
+  color: $neutral-600;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-default;
+
+  &:hover:not(:disabled) {
+    background: $primary-light;
+    color: $primary-color;
+  }
+
+  &.btn-delete:hover:not(:disabled) {
+    background: #fee2e2;
+    color: $danger-color;
+  }
+
+  .btn-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+.link-button {
+  color: $primary-color;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+  transition: color $transition-default;
+
+  &:hover {
+    color: $primary-dark;
+  }
+}
+
+// EMPTY STATE
+.empty-state {
+  @include flex-center;
+  flex-direction: column;
+  padding: $spacing-4xl $spacing-2xl;
+  text-align: center;
+  @include card-base;
+
+  .empty-icon {
+    width: $spacing-4xl;
+    height: $spacing-4xl;
+    @include flex-center;
+    background: $neutral-100;
+    border-radius: 50%;
+    margin-bottom: $spacing-xl;
+
+    svg {
+      width: $spacing-2xl;
+      height: $spacing-2xl;
+      color: $neutral-400;
+    }
+  }
+
+  .empty-title {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $neutral-900;
+    margin: 0 0 $spacing-sm 0;
+  }
+
+  .empty-description {
+    color: $neutral-600;
+    margin: 0 0 $spacing-2xl 0;
+    max-width: 32rem;
+    line-height: 1.5;
+  }
+}
+
+// MODAL
+.modal-overlay {
+  @include modal-overlay;
+}
+
+.modal-content {
+  @include modal-content;
+
+  .modal-header {
+    @include flex-between;
+    padding: $spacing-xl $spacing-xl 0 $spacing-xl;
+
+    .modal-title {
+      font-size: $font-size-lg;
+      font-weight: $font-weight-semibold;
+      color: $neutral-900;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: $neutral-400;
+      transition: color $transition-default;
+
+      &:hover {
+        color: $neutral-600;
+      }
+
+      svg {
+        width: $spacing-xl;
+        height: $spacing-xl;
+      }
+    }
+  }
+
+  .modal-body {
+    padding: $spacing-xl;
+    display: flex;
+    gap: $spacing-lg;
+
+    .warning-icon {
+      width: $spacing-3xl;
+      height: $spacing-3xl;
+      @include flex-center;
+      background: #fef3c7;
+      border-radius: 50%;
+      flex-shrink: 0;
+
+      svg {
+        width: $spacing-xl;
+        height: $spacing-xl;
+        color: $warning-color;
+      }
+    }
+
+    .warning-content {
+      flex: 1;
+
+      .warning-title {
+        font-size: $font-size-base;
+        font-weight: $font-weight-semibold;
+        color: $neutral-900;
+        margin: 0 0 $spacing-sm 0;
+      }
+
+      .warning-description {
+        font-size: $font-size-sm;
+        color: $neutral-600;
+        margin: 0;
+        line-height: 1.5;
+      }
+    }
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: $spacing-md;
+    justify-content: flex-end;
+    padding: 0 $spacing-xl $spacing-xl $spacing-xl;
+
+    @include mobile-only {
+      flex-direction: column-reverse;
+    }
+  }
+}
+
+// SPINNERS
+.spinner-small {
+  width: $spacing-lg;
+  height: $spacing-lg;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+// METRICS
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-lg;
+  padding: $spacing-lg $spacing-xl;
+  background: $neutral-50;
+
+  @include mobile-only {
+    grid-template-columns: 1fr;
+    gap: $spacing-md;
+  }
+
+  .metric {
+    text-align: center;
+
+    .metric-label {
+      display: block;
+      font-size: $font-size-xs;
+      color: $neutral-500;
+      margin-bottom: $spacing-xs;
+      font-weight: $font-weight-medium;
+    }
+
+    .metric-value {
+      display: block;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $neutral-900;
+
+      &.estado-critico {
+        color: $danger-color;
+      }
+
+      &.estado-bajo {
+        color: $warning-color;
+      }
+
+      &.estado-normal {
+        color: $success-color;
+      }
+    }
+  }
+}

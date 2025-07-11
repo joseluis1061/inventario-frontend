@@ -1,0 +1,204 @@
+// ===== MIXINS DE LAYOUT =====
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+// ===== MIXINS DE CONTENEDOR =====
+@mixin container-responsive {
+  max-width: $breakpoint-xl;
+  margin: 0 auto;
+  padding: 0 $spacing-lg;
+
+  @media (min-width: $breakpoint-sm) {
+    padding: 0 $spacing-2xl;
+  }
+}
+
+// ===== MIXINS DE CARDS =====
+@mixin card-base {
+  background: white;
+  border: 1px solid $neutral-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  transition: all $transition-default;
+}
+
+@mixin card-hover {
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+// ===== MIXINS DE BOTONES =====
+@mixin btn-base {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg;
+  border: none;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-default;
+  text-decoration: none;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-icon {
+    width: $spacing-lg;
+    height: $spacing-lg;
+  }
+}
+
+@mixin btn-primary {
+  @include btn-base;
+  background: $primary-color;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: $primary-dark;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@mixin btn-secondary {
+  @include btn-base;
+  background: $neutral-100;
+  color: $neutral-700;
+  border: 1px solid $neutral-300;
+
+  &:hover:not(:disabled) {
+    background: $neutral-200;
+    border-color: $neutral-400;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.3);
+  }
+}
+
+@mixin btn-danger {
+  @include btn-base;
+  background: $danger-color;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: $danger-dark;
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3);
+  }
+}
+
+// ===== MIXINS DE FORMULARIOS =====
+@mixin input-base {
+  width: 100%;
+  padding: $spacing-md;
+  border: 1px solid $neutral-300;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  transition: all $transition-default;
+
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  &::placeholder {
+    color: $neutral-400;
+  }
+}
+
+// ===== MIXINS DE MODAL =====
+@mixin modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  @include flex-center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+@mixin modal-content {
+  background: white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  max-width: 28rem;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+// ===== MIXINS DE LOADING =====
+@mixin spinner($size: 2rem) {
+  width: $size;
+  height: $size;
+  border: 3px solid $neutral-200;
+  border-top: 3px solid $primary-color;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+// ===== MIXINS DE TEXTO =====
+@mixin text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// ===== MIXINS RESPONSIVE =====
+@mixin mobile-only {
+  @media (max-width: $breakpoint-sm-1px) {
+    @content;
+  }
+}
+
+@mixin tablet-up {
+  @media (min-width: $breakpoint-sm) {
+    @content;
+  }
+}
+
+@mixin desktop-up {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}

@@ -1,0 +1,85 @@
+// ===== IMPORTS =====
+@import '../../../styles/variables';
+@import '../../../styles/mixins';
+
+// ===== CATEGORIAS ESPECÍFICOS =====
+
+// Ícono de categoría específico
+.categoria-icon {
+  width: $spacing-3xl;
+  height: $spacing-3xl;
+  border-radius: $radius-lg;
+  @include flex-center;
+  flex-shrink: 0;
+
+  .icon {
+    width: $spacing-xl;
+    height: $spacing-xl;
+  }
+}
+
+// Información de categoría
+.categoria-info {
+  display: flex;
+  gap: $spacing-lg;
+  margin-bottom: $spacing-lg;
+}
+
+.categoria-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.categoria-nombre {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $neutral-900;
+  margin: 0 0 $spacing-xs 0;
+  word-break: break-word;
+}
+
+.categoria-descripcion {
+  font-size: $font-size-sm;
+  color: $neutral-600;
+  margin: 0;
+  line-height: 1.4;
+  @include text-clamp(2);
+}
+
+.categoria-badges {
+  display: flex;
+  gap: $spacing-sm;
+  justify-content: flex-end;
+}
+
+// Badges específicos de categorías
+.badge-comun {
+  @extend .badge;
+  background: $primary-light;
+  color: $primary-color;
+}
+
+.badge-personalizada {
+  @extend .badge;
+  background: $neutral-100;
+  color: $neutral-700;
+}
+
+// Fecha de creación
+.fecha-creacion {
+  @include flex-start;
+  gap: $spacing-sm;
+  font-size: $font-size-xs;
+  color: $neutral-500;
+
+  .fecha-icon {
+    width: $spacing-lg;
+    height: $spacing-lg;
+  }
+}
+
+// Acciones de tarjeta
+.card-actions {
+  display: flex;
+  gap: $spacing-sm;
+}
