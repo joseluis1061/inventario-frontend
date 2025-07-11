@@ -186,7 +186,7 @@
 
 // ===== MIXINS RESPONSIVE =====
 @mixin mobile-only {
-  @media (max-width: $breakpoint-sm) {
+  @media (max-width: 639px) {
     @content;
   }
 }

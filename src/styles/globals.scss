@@ -25,6 +25,174 @@
   .transition-default {
     @apply transition-all duration-200 ease-in-out;
   }
+
+  // ===== CLASES DE FORMULARIOS =====
+  .form-container {
+    @include container-responsive;
+    @apply pt-0 pb-16;
+  }
+
+  .form-card {
+    @include card-base;
+    @apply max-w-3xl mx-auto p-8;
+
+    @include mobile-only {
+      @apply p-6 mx-4;
+    }
+  }
+
+  .form-group {
+    @apply mb-8;
+
+    &:last-child {
+      @apply mb-0;
+    }
+  }
+
+  .form-label {
+    @apply block text-sm font-medium text-neutral-700 mb-2;
+
+    &.required::after {
+      content: ' *';
+      @apply text-danger-500;
+    }
+  }
+
+  .form-input, .form-textarea {
+    @include input-base;
+    @apply pr-12; // Espacio para iconos de estado
+
+    &.error {
+      @apply border-danger-500;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+    }
+
+    &.success {
+      @apply border-success-500;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+  }
+
+  .form-textarea {
+    @apply resize-y min-h-[100px] leading-6;
+  }
+
+  .input-with-validation {
+    @apply relative mb-1;
+  }
+
+  .input-group {
+    @apply relative flex items-center;
+  }
+
+  .input-status {
+    @apply absolute right-3 top-1/2 transform -translate-y-1/2 z-10;
+
+    .status-icon {
+      @apply flex items-center justify-center w-5 h-5;
+
+      &.checking {
+        @apply text-neutral-400;
+      }
+
+      &.valid {
+        @apply text-success-500;
+      }
+
+      &.invalid {
+        @apply text-danger-500;
+      }
+
+      svg {
+        @apply w-4 h-4;
+      }
+    }
+  }
+
+  .field-message {
+    @apply flex items-center gap-2 mt-2 text-xs;
+
+    .message-icon {
+      @apply w-4 h-4 flex-shrink-0;
+    }
+
+    &.error {
+      @apply text-danger-500;
+    }
+
+    &.success {
+      @apply text-success-500;
+    }
+
+    &.info {
+      @apply text-neutral-500;
+    }
+  }
+
+  .char-counter {
+    @apply text-right text-xs text-neutral-500 mt-1;
+  }
+
+  .form-actions {
+    @include flex-between;
+    @apply mt-12 pt-8 border-t border-neutral-200;
+
+    @include mobile-only {
+      @apply flex-col gap-6 items-stretch;
+
+      .actions-left,
+      .actions-right {
+        @apply w-full;
+      }
+
+      .actions-right {
+        @apply flex flex-col gap-4;
+      }
+    }
+
+    .actions-left,
+    .actions-right {
+      @apply flex gap-4 items-center;
+    }
+
+    @include tablet-up {
+      .actions-right {
+        @apply justify-end;
+      }
+    }
+  }
+
+  .preview-section {
+    @apply mt-12 p-8 bg-neutral-50 rounded-lg border border-neutral-200;
+
+    .preview-title {
+      @apply text-lg font-semibold text-neutral-800 mb-6;
+    }
+  }
+
+  .help-section {
+    @apply mt-12 p-8 bg-primary-50 rounded-lg border-l-4 border-primary-500;
+
+    .help-title {
+      @apply flex items-center gap-2 text-base font-medium text-primary-600 mb-4;
+
+      .help-icon {
+        @apply w-5 h-5;
+      }
+    }
+
+    .help-list {
+      @apply m-0 pl-6 text-primary-600;
+
+      li {
+        @apply text-sm mb-1 leading-6;
+
+        &:last-child {
+          @apply mb-0;
+        }
+      }
+    }
+  }
 }
 
 // ===== ANIMACIONES GLOBALES =====
@@ -60,8 +228,20 @@
   }
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // ===== CLASES DE ANIMACIÓN =====
 .animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
 .animate-spin { animation: spin 1s linear infinite; }
 .animate-slide-in { animation: slideIn 0.3s ease-out; }
 .animate-slide-out { animation: slideOut 0.3s ease-in; }
+.field-message { animation: slideDown 0.2s ease-out; }

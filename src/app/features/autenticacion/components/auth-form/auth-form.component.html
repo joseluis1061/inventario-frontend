@@ -42,7 +42,7 @@
           placeholder="Ingresa tu usuario"
           autocomplete="username"
           (input)="onFieldInput()"
-          class="input-field w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-default"
+          class="input-field w-full pl-10 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-default"
           [class.border-status-error-500]="hasFieldError('username')"
           [class.ring-status-error-200]="hasFieldError('username')"
           cdkTrapFocus
@@ -73,7 +73,7 @@
           placeholder="Ingresa tu contraseña"
           autocomplete="current-password"
           (input)="onFieldInput()"
-          class="input-field w-full pl-10 pr-12 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-default"
+          class="input-field w-full pl-10 pr-12 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-default"
           [class.border-status-error-500]="hasFieldError('password')"
           [class.ring-status-error-200]="hasFieldError('password')"
         />
@@ -108,7 +108,7 @@
         <input
           type="checkbox"
           formControlName="rememberMe"
-          class="checkbox-field w-4 h-4 text-primary-600 bg-white border-neutral-300 rounded focus:ring-primary-500 focus:ring-2 transition-default"
+          class="checkbox-field w-4 h-4 text-blue-600 bg-white border-neutral-300 rounded focus:ring-blue-500 focus:ring-2 transition-default"
         />
         <span class="ml-2 text-sm text-neutral-700">Recordarme</span>
       </label>
@@ -116,7 +116,7 @@
       <button
         type="button"
         (click)="goToForgotPassword()"
-        class="text-sm text-primary-600 hover:text-primary-700 transition-default underline-offset-4 hover:underline font-medium"
+        class="text-sm text-blue-600 hover:text-blue-700 transition-default underline-offset-4 hover:underline font-medium"
       >
         ¿Olvidaste tu contraseña?
       </button>
@@ -125,7 +125,7 @@
     <!-- Botón Submit -->
     <button
       type="submit"
-      class="btn-primary w-full h-12 px-6 py-3 bg-primary-500 hover:bg-primary-600 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-default shadow-sm hover:shadow-md focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+      class="btn-blue w-full h-12 px-6 py-3 bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-default shadow-sm hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
       [disabled]="isLoading() || loginForm.invalid"
     >
       @if (isLoading()) {
