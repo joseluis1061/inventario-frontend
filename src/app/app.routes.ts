@@ -33,18 +33,32 @@ export const routes: Routes = [
   },
 
   // ✅ Rutas principales con MainLayout
+  // Dashboard con MainLayout
   {
-    path: '',
+    path: 'dashboard',
     loadComponent: () => import('./layouts/main-layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
     canActivate: [authGuard],
     children: [
       {
-        path: 'dashboard',
+        path: '',
         loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
+      }
+    ]
+  },
+
+  // Categorías con MainLayout
+  {
+    path: 'categorias',
+    loadComponent: () => import('./layouts/main-layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./features/categorias/pages/categorias/categorias.component').then(m => m.CategoriasComponent)
       },
       {
-        path: 'categorias',
-        loadChildren: () => import('./features/categorias/categorias.routes').then(m => m.CATEGORIAS_ROUTES)
+        path: 'crear',
+        loadComponent: () => import('./features/categorias/pages/crear-categoria/crear-categoria.component').then(m => m.CrearCategoriaComponent)
       }
     ]
   },

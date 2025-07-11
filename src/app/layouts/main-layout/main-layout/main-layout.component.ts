@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { RouterOutlet, Router, NavigationEnd, RouterLink, RouterLinkActive } from '@angular/router';
 import { Subject, takeUntil, filter } from 'rxjs';
 
 import { AuthService } from '../../../core/services/auth-service.service';
@@ -11,7 +11,9 @@ import { LoadingService } from '../../../core/services';
   selector: 'app-main-layout',
   imports: [
     CommonModule,
-    RouterOutlet
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive
   ],
   templateUrl: './main-layout.component.html',
   styleUrl: './main-layout.component.scss'
