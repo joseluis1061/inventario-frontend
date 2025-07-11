@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, noAuthGuard, adminGuard, managerGuard, roleGuard } from './core/guards';
+import { authGuard, noAuthGuard } from './core/guards';
 
 export const routes: Routes = [
   // Redirect root
@@ -9,7 +9,7 @@ export const routes: Routes = [
     pathMatch: 'full'
   },
 
-  // ✅ Rutas de autenticación con AuthLayout
+  // Rutas de autenticación con AuthLayout
   {
     path: 'auth',
     loadComponent: () => import('./layouts/auth-layout/auth-layout.component').then(m => m.AuthLayoutComponent),
@@ -31,18 +31,25 @@ export const routes: Routes = [
     ]
   },
 
-  // ✅ Ruta de login directa (redirect a auth/login)
+  // ✅ Rutas principales con MainLayout
+  {
+    path: '',
+    loadComponent: () => import('./layouts/main-layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivate: [authGuard],
+    children: [
+      {
+        path: 'dashboard',
+        loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
+      }
+      // Aquí irán productos, categorías, movimientos, etc.
+    ]
+  },
+
+  // Redirect login
   {
     path: 'login',
     redirectTo: '/auth/login',
     pathMatch: 'full'
-  },
-
-  // Dashboard (requiere autenticación)
-  {
-    path: 'dashboard',
-    loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES),
-    canActivate: [authGuard]
   },
 
   // Wildcard route

@@ -1,9 +1,10 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, BehaviorSubject, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment.development';
 import { LoginRequest, LoginResponse, UserInfo } from '../models';
 import { NotificationService } from '../../core/services/notification.service';
+import { LoadingService } from './loading.service';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,10 @@ export class AuthService {
   // Estado de autenticación
   private currentUserSubject = new BehaviorSubject<UserInfo | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  currentUser = signal<UserInfo | null>(null); // ✅ Signal local
+
+  // Estados reactivos
+  isLoading$ = inject(LoadingService).loading$;
 
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   public isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
@@ -24,6 +29,8 @@ export class AuthService {
     // Verificar si hay token guardado al inicializar
     this.checkStoredAuth();
   }
+
+
 
   /**
    * Realizar login
