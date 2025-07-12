@@ -110,8 +110,8 @@ export class CategoriasComponent implements OnInit, OnDestroy {
    * Editar categoría (placeholder)
    */
   editarCategoria(categoria: CategoriaResponse): void {
-    // TODO: Implementar modal o navegación para editar categoría
-    console.log('✏️ Editar categoría:', categoria.nombre);
+    console.log('Editar categoría:', categoria);
+    this.router.navigate(['/categorias/actualizar', categoria.id]);
   }
 
   /**

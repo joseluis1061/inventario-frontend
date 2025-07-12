@@ -8,5 +8,9 @@ export const CATEGORIAS_ROUTES: Routes = [
   {
     path: 'crear',
     loadComponent: () => import('./pages/crear-categoria/crear-categoria.component').then(m => m.CrearCategoriaComponent)
+  },
+  {
+    path: 'actualizar/:id',
+    loadComponent: () => import('./pages/actualizar-categoria/actualizar-categoria.component').then(m => m.ActualizarCategoriaComponent)
   }
 ];

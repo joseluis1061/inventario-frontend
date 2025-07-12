@@ -59,6 +59,10 @@ export const routes: Routes = [
       {
         path: 'crear',
         loadComponent: () => import('./features/categorias/pages/crear-categoria/crear-categoria.component').then(m => m.CrearCategoriaComponent)
+      },
+      {
+        path: 'actualizar/:id',
+        loadComponent: () => import('./features/categorias/pages/actualizar-categoria/actualizar-categoria.component').then(m => m.ActualizarCategoriaComponent)
       }
     ]
   },
