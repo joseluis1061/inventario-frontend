@@ -12,48 +12,75 @@ ng serve
 
 Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
-## Code scaffolding
+## Estructura
+src/app
+├── core
+         ├── guards
+                  ├── admin
+                  ├── auth
+                  ├── manager
+                  ├── no-auth
+                  ├── role
+                  └── index
+         ├── interceptors
+                  ├── auth
+                  ├── error
+                  ├── loading
+                  └── index
+         ├── models
+                           └── auth
+                                    ├── login
+                                    ├── index
+                  ├── categorias
+                  ├── notification
+                  ├── producto
+                  ├── usuario
+                  └── index
+         └── services
+                  ├── auth
+                  ├── categorias
+                  ├── loading
+                  ├── notification
+                  └── index
+├── features
+         ├── autenticacion
+                  └── components
+                           ├── auth-form
+                           └── auth-header
+                  ├── pages
+                           ├── forgot-password
+                           └── login
+                  └── autenticacion.routes.ts
+         ├── categorias
+                  ├── components
+                  ├── pages
+                           ├── actualizar-categorias
+                           ├── crear-categorias
+                           └── categorias
+                  └── categorias.routes.ts
+         ├── dashboard
+                  ├── components
+                  ├── pages
+                  └── dashboard.routes.ts
+         ├── productos
+                  ├── components
+                  ├── pages
+                  └── productos.routes.ts
+         └── usuarios
+                  ├── components
+                  ├── pages
+                  └── usuarios.routes.ts
+├── layouts
+         ├── auth-layout
+         └── main-layout
+├── shared
+         └── components
+                  └── feedback/toast/toast.component
+├── styles.scss
+├── main.ts
+├── index.html
+├── app.component.html
+├── app.component.scss
+├── app.component.spect.ts
+├── app.component.ts
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

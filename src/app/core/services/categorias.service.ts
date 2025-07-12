@@ -13,7 +13,7 @@ import {
   CategoriaPaginatedResponse,
   CategoriaEstadisticas,
   CategoriaLoadingStates
-} from '../models/categoria';
+} from '../models/categoria.interface';
 import { AuthService } from './auth-service.service';
 import { NotificationService } from './notification.service';
 

@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { Subject, takeUntil, catchError, of } from 'rxjs';
 
 import { CategoriasService } from '../../../../core/services/categorias.service';
-import { CategoriaCreateRequest } from '../../../../core/models/categoria';
+import { CategoriaCreateRequest } from '../../../../core/models/categoria.interface';
 
 @Component({
   selector: 'app-crear-categoria',

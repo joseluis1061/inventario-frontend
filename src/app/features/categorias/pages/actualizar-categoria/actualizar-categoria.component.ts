@@ -5,7 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, takeUntil, catchError, of, switchMap } from 'rxjs';
 
 import { CategoriasService } from '../../../../core/services/categorias.service';
-import { CategoriaUpdateRequest, CategoriaResponse } from '../../../../core/models/categoria';
+import { CategoriaUpdateRequest, CategoriaResponse } from '../../../../core/models/categoria.interface';
 
 @Component({
   selector: 'app-actualizar-categoria',
