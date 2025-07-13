@@ -117,14 +117,10 @@ export interface ProductoPaginatedResponse {
  */
 export interface ProductoEstadisticasStock {
   totalProductos: number;
-  productosConStock: number;
   productosStockBajo: number;
-  productosStockCritico: number;
-  valorTotalInventario: number;
-  promedioStock: number;
-  categoriaConMasProductos: string;
-  productoMasCaro: ProductoBasico;
-  productoMasBarato: ProductoBasico;
+  productosSinStock: number;
+  porcentajeStockBajo: number;
+  porcentajeSinStock: number;
 }
 
 /**

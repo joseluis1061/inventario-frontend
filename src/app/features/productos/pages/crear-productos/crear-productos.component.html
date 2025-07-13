@@ -1,1 +1,376 @@
-<p>crear-productos works!</p>
+<!-- Header de la página -->
+<div class="bg-white border-b border-neutral-200 px-8 py-6 mb-8">
+  <div class="flex justify-between items-start max-w-5xl mx-auto">
+    <div class="flex-1">
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-neutral-900 mb-2">
+        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Nuevo Producto
+      </h1>
+      <p class="text-neutral-600 text-base">
+        Agregar un nuevo producto al inventario
+      </p>
+    </div>
+
+    <div class="flex gap-3 items-center">
+      <button
+        type="button"
+        class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-3 px-4 rounded-lg transition-all duration-200 border border-neutral-300"
+        (click)="onCancel()"
+        [disabled]="isLoading()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Contenedor principal -->
+<div class="max-w-5xl mx-auto px-4 sm:px-8 pb-16">
+  <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
+
+    <!-- Progress indicator -->
+    <div class="flex items-center mb-12 pb-8 border-b border-neutral-200">
+      <div class="flex items-center gap-4">
+        <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+          1
+        </div>
+        <span class="text-lg font-medium text-neutral-700">Información del Producto</span>
+      </div>
+    </div>
+
+    <!-- Loading de categorías -->
+    @if (loadingCategorias()) {
+      <div class="flex items-center justify-center py-12">
+        <div class="flex flex-col items-center gap-4 text-neutral-600">
+          <div class="w-8 h-8 border-3 border-neutral-200 border-t-blue-500 rounded-full animate-spin"></div>
+          <span>Cargando categorías...</span>
+        </div>
+      </div>
+    } @else {
+      <!-- Formulario -->
+      <form [formGroup]="productoForm" (ngSubmit)="onSubmit()" novalidate>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+          <!-- Columna izquierda - Información básica -->
+          <div class="space-y-6">
+
+            <!-- Campo Nombre -->
+            <div>
+              <label for="nombre" class="block text-sm font-medium text-neutral-700 mb-2">
+                Nombre del Producto
+                <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="nombre"
+                formControlName="nombre"
+                class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                [class.border-red-500]="hasFieldError('nombre')"
+                placeholder="Ej: iPhone 15 Pro, Samsung Galaxy S24..."
+                maxlength="100"
+              />
+              @if (hasFieldError('nombre')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('nombre') }}
+                </div>
+              }
+              <div class="text-right text-xs text-neutral-500 mt-1">
+                {{ productoForm.get('nombre')?.value?.length || 0 }}/100
+              </div>
+            </div>
+
+            <!-- Campo Descripción -->
+            <div>
+              <label for="descripcion" class="block text-sm font-medium text-neutral-700 mb-2">
+                Descripción
+                <span class="text-red-500">*</span>
+              </label>
+              <textarea
+                id="descripcion"
+                formControlName="descripcion"
+                class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm resize-y min-h-[120px] leading-6"
+                [class.border-red-500]="hasFieldError('descripcion')"
+                placeholder="Describe las características principales del producto..."
+                rows="5"
+                maxlength="500"
+              ></textarea>
+              @if (hasFieldError('descripcion')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('descripcion') }}
+                </div>
+              }
+              <div class="text-right text-xs text-neutral-500 mt-1">
+                {{ productoForm.get('descripcion')?.value?.length || 0 }}/500
+              </div>
+            </div>
+
+            <!-- Campo Categoría -->
+            <div>
+              <label for="categoriaId" class="block text-sm font-medium text-neutral-700 mb-2">
+                Categoría
+                <span class="text-red-500">*</span>
+              </label>
+              <select
+                id="categoriaId"
+                formControlName="categoriaId"
+                class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm bg-white"
+                [class.border-red-500]="hasFieldError('categoriaId')"
+              >
+                <option value="">Seleccionar categoría</option>
+                @for (categoria of categorias(); track categoria.id) {
+                  <option [value]="categoria.id">{{ categoria.nombre }}</option>
+                }
+              </select>
+              @if (hasFieldError('categoriaId')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('categoriaId') }}
+                </div>
+              }
+            </div>
+
+          </div>
+
+          <!-- Columna derecha - Detalles comerciales -->
+          <div class="space-y-6">
+
+            <!-- Campo Precio -->
+            <div>
+              <label for="precio" class="block text-sm font-medium text-neutral-700 mb-2">
+                Precio
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span class="text-neutral-500 text-sm">$</span>
+                </div>
+                <input
+                  type="number"
+                  id="precio"
+                  formControlName="precio"
+                  class="w-full pl-8 pr-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                  [class.border-red-500]="hasFieldError('precio')"
+                  placeholder="0.00"
+                  min="0.01"
+                  max="999999999.99"
+                  step="0.01"
+                />
+              </div>
+              @if (hasFieldError('precio')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('precio') }}
+                </div>
+              }
+            </div>
+
+            <!-- Campo Stock Mínimo -->
+            <div>
+              <label for="stockMinimo" class="block text-sm font-medium text-neutral-700 mb-2">
+                Stock Mínimo
+                <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                id="stockMinimo"
+                formControlName="stockMinimo"
+                class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                [class.border-red-500]="hasFieldError('stockMinimo')"
+                placeholder="5"
+                min="0"
+                max="999999"
+              />
+              @if (hasFieldError('stockMinimo')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('stockMinimo') }}
+                </div>
+              }
+              <div class="text-xs text-neutral-500 mt-1">
+                Nivel mínimo para alertas de stock bajo
+              </div>
+            </div>
+
+            <!-- Campo Imagen (Opcional) -->
+            <div>
+              <label for="imagenPlaceholder" class="block text-sm font-medium text-neutral-700 mb-2">
+                URL de Imagen
+                <span class="font-normal text-neutral-500 text-xs">(Opcional)</span>
+              </label>
+              <div class="flex gap-2">
+                <input
+                  type="url"
+                  id="imagenPlaceholder"
+                  formControlName="imagenPlaceholder"
+                  class="flex-1 px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                  placeholder="https://ejemplo.com/imagen.jpg"
+                />
+                <button
+                  type="button"
+                  class="px-4 py-3 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 rounded-lg transition-all duration-200 border border-neutral-300 text-sm"
+                  (click)="generarImagenPlaceholder()"
+                  [disabled]="!getCategoriaSeleccionada()"
+                  title="Generar imagen automática"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="text-xs text-neutral-500 mt-1">
+                Si no proporcionas una imagen, se generará automáticamente
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Vista previa del producto -->
+        @if (productoForm.get('nombre')?.value && productoForm.get('nombre')?.value.trim()) {
+          <div class="mt-12 p-8 bg-neutral-50 rounded-lg border border-neutral-200">
+            <h3 class="text-lg font-semibold text-neutral-800 mb-6">Vista Previa</h3>
+            <div class="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm">
+              <div class="flex items-start gap-6">
+                <!-- Imagen preview -->
+                <div class="flex-shrink-0 w-20 h-20">
+                  @if (productoForm.get('imagenPlaceholder')?.value) {
+                    <img
+                      class="w-20 h-20 rounded-lg object-cover border border-neutral-200"
+                      [src]="productoForm.get('imagenPlaceholder')?.value"
+                      [alt]="productoForm.get('nombre')?.value"
+                    />
+                  } @else {
+                    <div class="w-20 h-20 bg-neutral-100 rounded-lg flex items-center justify-center border border-neutral-200">
+                      <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                    </div>
+                  }
+                </div>
+
+                <!-- Información del producto -->
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-lg font-semibold text-neutral-900 mb-1 truncate">
+                    {{ productoForm.get('nombre')?.value }}
+                  </h4>
+                  <p class="text-sm text-neutral-600 mb-3 line-clamp-2">
+                    {{ productoForm.get('descripcion')?.value || 'Sin descripción' }}
+                  </p>
+
+                  <div class="flex items-center gap-4 text-sm">
+                    @if (productoForm.get('precio')?.value) {
+                      <div class="font-semibold text-neutral-900">
+                        {{ formatearPrecio(productoForm.get('precio')?.value) }}
+                      </div>
+                    }
+
+                    @if (getCategoriaSeleccionada(); as categoria) {
+                      <div class="flex items-center space-x-2">
+                        <div class="w-3 h-3 rounded-full" [style.background-color]="categoria.colorSugerido"></div>
+                        <span class="text-neutral-600">{{ categoria.nombre }}</span>
+                      </div>
+                    }
+
+                    @if (productoForm.get('stockMinimo')?.value) {
+                      <div class="text-neutral-500">
+                        Stock mín: {{ productoForm.get('stockMinimo')?.value }}
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Estado badge -->
+                <div class="flex-shrink-0">
+                  <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Nuevo</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Acciones del formulario -->
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-neutral-200">
+          <div class="flex gap-4 items-center">
+            <button
+              type="button"
+              class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="onReset()"
+              [disabled]="isLoading() || !productoForm.dirty"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Limpiar
+            </button>
+          </div>
+
+          <div class="flex gap-4 items-center">
+            <button
+              type="button"
+              class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-all duration-200"
+              (click)="onCancel()"
+              [disabled]="isLoading()"
+            >
+              Cancelar
+            </button>
+
+            @if (showSubmitButton) {
+              <button
+                type="submit"
+                class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                [disabled]="!isFormReady"
+              >
+                @if (isLoading()) {
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Creando...
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Crear Producto
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+      </form>
+    }
+
+    <!-- Ayuda/Tips -->
+    <div class="mt-12 p-8 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+      <h4 class="flex items-center gap-2 text-base font-medium text-blue-600 mb-4">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Consejos para crear productos
+      </h4>
+      <ul class="m-0 pl-6 text-blue-600 space-y-1">
+        <li class="text-sm leading-6">Usa nombres descriptivos que identifiquen claramente el producto</li>
+        <li class="text-sm leading-6">La descripción debe incluir características principales y beneficios</li>
+        <li class="text-sm leading-6">Establece un stock mínimo realista para evitar faltantes</li>
+        <li class="text-sm leading-6">Una buena imagen mejora la experiencia del usuario</li>
+        <li class="text-sm leading-6">Puedes editar toda la información después de crear el producto</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
