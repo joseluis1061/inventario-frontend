@@ -54,15 +54,20 @@ export const routes: Routes = [
     children: [
       {
         path: '',
-        loadComponent: () => import('./features/categorias/pages/categorias/categorias.component').then(m => m.CategoriasComponent)
-      },
+        loadChildren: () => import('./features/categorias/categorias.routes').then(m => m.CATEGORIAS_ROUTES)
+      }
+    ]
+  },
+
+  // Productos con MainLayout
+  {
+    path: 'productos',
+    loadComponent: () => import('./layouts/main-layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivate: [authGuard],
+    children: [
       {
-        path: 'crear',
-        loadComponent: () => import('./features/categorias/pages/crear-categoria/crear-categoria.component').then(m => m.CrearCategoriaComponent)
-      },
-      {
-        path: 'actualizar/:id',
-        loadComponent: () => import('./features/categorias/pages/actualizar-categoria/actualizar-categoria.component').then(m => m.ActualizarCategoriaComponent)
+        path: '',
+        loadChildren: () => import('./features/productos/productos.routes').then(m => m.PRODUCTOS_ROUTES)
       }
     ]
   },

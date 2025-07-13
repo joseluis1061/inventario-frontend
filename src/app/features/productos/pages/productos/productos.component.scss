@@ -1,0 +1,315 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Componentes reutilizables
+@layer components {
+
+  // Transiciones suaves por defecto
+  .transition-default {
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  // Estados hover mejorados para botones
+  .btn-hover {
+    @apply transform transition-all duration-200 ease-in-out;
+
+    &:hover:not(:disabled) {
+      @apply -translate-y-0.5 shadow-md;
+    }
+
+    &:active:not(:disabled) {
+      @apply translate-y-0;
+    }
+  }
+
+  // Estilos para la tabla
+  .table-header {
+    @apply bg-neutral-50 px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider;
+  }
+
+  .table-cell {
+    @apply px-6 py-4 whitespace-nowrap text-sm text-neutral-900;
+  }
+
+  // Estado de imagen con loading
+  .product-image {
+    @apply w-12 h-12 rounded-lg object-cover border border-neutral-200 transition-opacity duration-200;
+
+    &.loading {
+      @apply opacity-50;
+    }
+
+    &.error {
+      @apply bg-neutral-100 flex items-center justify-center;
+    }
+  }
+
+  // Badge de estado de stock
+  .stock-badge {
+    @apply px-3 py-1 rounded-full text-xs font-medium;
+
+    &.critico {
+      @apply bg-red-100 text-red-800;
+    }
+
+    &.bajo {
+      @apply bg-yellow-100 text-yellow-800;
+    }
+
+    &.normal {
+      @apply bg-green-100 text-green-800;
+    }
+
+    &.alto {
+      @apply bg-blue-100 text-blue-800;
+    }
+  }
+
+  // Badge de categoría de precio
+  .price-category-badge {
+    @apply px-2 py-1 rounded-full text-xs font-medium;
+
+    &.basico {
+      @apply bg-gray-100 text-gray-800;
+    }
+
+    &.estandar {
+      @apply bg-blue-100 text-blue-800;
+    }
+
+    &.premium {
+      @apply bg-purple-100 text-purple-800;
+    }
+
+    &.lujo {
+      @apply bg-amber-100 text-amber-800;
+    }
+  }
+
+  // Animaciones para estadísticas
+  .stat-card {
+    @apply transition-all duration-300 ease-in-out;
+
+    &:hover {
+      @apply scale-105;
+    }
+  }
+
+  // Input de búsqueda mejorado
+  .search-input {
+    @apply w-full pl-11 pr-4 py-3 border border-neutral-300 rounded-lg
+           focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           transition-all duration-200 text-sm placeholder-neutral-400;
+
+    &:focus {
+      @apply outline-none shadow-sm;
+    }
+  }
+
+  // Select personalizado
+  .filter-select {
+    @apply w-full px-3 py-3 border border-neutral-300 rounded-lg
+           focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+           transition-all duration-200 text-sm bg-white;
+
+    &:focus {
+      @apply outline-none;
+    }
+  }
+
+  // Modal mejorado
+  .modal-overlay {
+    @apply fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .modal-content {
+    @apply bg-white rounded-xl shadow-xl max-w-md w-11/12 max-h-screen overflow-y-auto;
+    animation: slideUp 0.3s ease-out;
+  }
+
+}
+
+// Animaciones personalizadas
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Utilidades adicionales
+@layer utilities {
+
+  // Truncar texto con puntos suspensivos
+  .text-ellipsis-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  // Bordes con colores de categoría
+  .border-categoria {
+    border-left: 4px solid var(--categoria-color);
+  }
+
+  // Estado de carga para filas de tabla
+  .loading-row {
+    @apply opacity-50 pointer-events-none;
+    animation: pulse 2s infinite;
+  }
+
+  // Estado hover para filas
+  .table-row-hover {
+    @apply hover:bg-neutral-50 transition-colors duration-200 cursor-pointer;
+  }
+
+  // Iconos de ordenamiento
+  .sort-icon {
+    @apply transition-transform duration-200;
+
+    &.active {
+      @apply text-blue-500;
+    }
+
+    &.desc {
+      @apply rotate-180;
+    }
+  }
+
+  // Estados de los botones de acción
+  .action-btn {
+    @apply inline-flex items-center px-3 py-1.5 border border-transparent
+           text-xs font-medium rounded-md transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-offset-2;
+
+    &.edit {
+      @apply text-blue-600 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500;
+    }
+
+    &.delete {
+      @apply text-red-600 bg-red-100 hover:bg-red-200 focus:ring-red-500;
+
+      &:disabled {
+        @apply opacity-50 cursor-not-allowed;
+      }
+    }
+  }
+
+}
+
+// Responsive mejoras
+@media (max-width: 768px) {
+  // En móvil, ajustar espaciado
+  .table-cell {
+    @apply px-4 py-3;
+  }
+
+  .table-header {
+    @apply px-4 py-3;
+  }
+
+  // Ocultar columnas menos importantes en móvil
+  .hidden-mobile {
+    @apply hidden;
+  }
+
+  // Botones más grandes en móvil
+  .action-btn {
+    @apply px-4 py-2 text-sm;
+  }
+}
+
+@media (max-width: 640px) {
+  // Hacer scroll horizontal más visible
+  .table-container {
+    &::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      @apply bg-neutral-100 rounded-lg;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      @apply bg-neutral-300 rounded-lg;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      @apply bg-neutral-400;
+    }
+  }
+}
+
+// Mejoras de accesibilidad
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// Dark mode preparado (para implementación futura)
+@media (prefers-color-scheme: dark) {
+  // Variables CSS para temas oscuros cuando se implemente
+}
+
+// Estados de focus mejorados
+.focus-visible {
+  @apply outline-2 outline-blue-500 outline-offset-2;
+}
+
+// Spinner personalizado
+.spinner {
+  @apply w-4 h-4 border-2 border-white border-t-transparent rounded-full;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Estado de imagen rota
+.broken-image {
+  @apply bg-neutral-100 flex items-center justify-center text-neutral-400;
+
+  &::before {
+    content: '📷';
+    font-size: 1.5rem;
+  }
+}

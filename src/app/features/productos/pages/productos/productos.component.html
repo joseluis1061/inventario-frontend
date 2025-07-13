@@ -1,0 +1,377 @@
+<!-- Header con título y botón crear -->
+<div class="bg-white border-b border-neutral-200 px-8 py-6 mb-8">
+  <div class="flex justify-between items-start max-w-7xl mx-auto">
+    <div class="flex-1">
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-neutral-900 mb-2">
+        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M9 5l3-3 3 3"></path>
+        </svg>
+        Productos
+      </h1>
+      <p class="text-neutral-600 text-base">
+        Gestiona el inventario de productos de tu empresa
+      </p>
+    </div>
+
+    <div class="flex gap-3 items-center">
+      <button
+        class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+        (click)="crearProducto()"
+        [disabled]="loadingStates().creating"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Nuevo Producto
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Barra de búsqueda -->
+<div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-8 max-w-7xl mx-auto">
+  <div class="flex gap-4 items-center">
+    <!-- Búsqueda -->
+    <div class="relative flex-1">
+      <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+      </svg>
+      <input
+        type="text"
+        class="w-full pl-11 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+        placeholder="Buscar productos por nombre, descripción o categoría..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+      @if (searchTerm()) {
+        <button
+          class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-neutral-400 hover:text-neutral-600"
+          (click)="limpiarBusqueda()"
+        >
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      }
+    </div>
+
+    <!-- Botón refrescar -->
+    <button
+      class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-3 px-4 rounded-lg transition-all duration-200 border border-neutral-300"
+      (click)="refrescar()"
+      [disabled]="loadingStates().listing"
+    >
+      <svg class="w-4 h-4" [class.animate-spin]="loadingStates().listing" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Refrescar
+    </button>
+  </div>
+
+  <!-- Estadísticas rápidas -->
+  @if (totalProductos > 0) {
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-neutral-200">
+      <div class="text-center">
+        <div class="text-2xl font-bold text-neutral-900">{{ totalProductos }}</div>
+        <div class="text-sm text-neutral-600">Total Productos</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-green-600">{{ productosConStock }}</div>
+        <div class="text-sm text-neutral-600">Con Stock</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-yellow-600">{{ productosStockBajo }}</div>
+        <div class="text-sm text-neutral-600">Stock Bajo</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-red-600">{{ productosStockCritico }}</div>
+        <div class="text-sm text-neutral-600">Stock Crítico</div>
+      </div>
+    </div>
+  }
+</div>
+
+<!-- Indicador de carga -->
+@if (loadingStates().listing) {
+  <div class="flex items-center justify-center py-12 bg-white rounded-xl shadow-sm border border-neutral-200 max-w-7xl mx-auto">
+    <div class="flex flex-col items-center gap-4 text-neutral-600">
+      <div class="w-8 h-8 border-3 border-neutral-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <span>Cargando productos...</span>
+    </div>
+  </div>
+}
+
+<!-- Tabla de productos -->
+@if (productosFiltrados.length > 0 && !loadingStates().listing) {
+  <div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+
+      <!-- Header de la tabla -->
+      <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-200">
+        <h3 class="text-lg font-semibold text-neutral-900">
+          Lista de Productos
+          <span class="text-sm font-normal text-neutral-600">
+            ({{ productosFiltrados.length }} {{ productosFiltrados.length === 1 ? 'producto' : 'productos' }})
+          </span>
+        </h3>
+      </div>
+
+      <!-- Tabla responsive -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-neutral-200">
+
+          <!-- Cabecera de la tabla -->
+          <thead class="bg-neutral-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Producto
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Categoría
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Precio
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Stock
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Creado
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+
+          <!-- Cuerpo de la tabla -->
+          <tbody class="bg-white divide-y divide-neutral-200">
+            @for (producto of productosFiltrados; track trackByProducto($index, producto)) {
+              <tr class="hover:bg-neutral-50 transition-colors duration-200">
+
+                <!-- Producto (imagen + info) -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center space-x-4">
+                    <div class="flex-shrink-0 w-12 h-12">
+                      <img
+                        class="w-12 h-12 rounded-lg object-cover border border-neutral-200"
+                        [src]="producto.imagenDisplay"
+                        [alt]="producto.nombre"
+                        (error)="onImageError($event, producto)"
+                      />
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <div class="text-sm font-medium text-neutral-900 truncate">
+                        {{ producto.nombre }}
+                      </div>
+                      <div class="text-sm text-neutral-500 truncate max-w-xs">
+                        {{ producto.descripcion }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Categoría -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 rounded-full" [style.background-color]="producto.categoria.colorSugerido"></div>
+                    <span class="text-sm text-neutral-900">{{ producto.nombreCategoria }}</span>
+                  </div>
+                </td>
+
+                <!-- Precio -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-semibold text-neutral-900">
+                    {{ formatearPrecio(producto.precio) }}
+                  </div>
+                  <div class="text-xs text-neutral-500">
+                    {{ producto.categoriaPrecio }}
+                  </div>
+                </td>
+
+                <!-- Stock -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-medium text-neutral-900">
+                    {{ producto.stockActual }} / {{ producto.stockMinimo }} min
+                  </div>
+                  <div class="text-xs text-neutral-500">
+                    Valor: {{ formatearPrecio(producto.valorInventario) }}
+                  </div>
+                </td>
+
+                <!-- Estado -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span class="px-3 py-1 rounded-full text-xs font-medium" [ngClass]="getEstadoStockClass(producto.estadoStock)">
+                    {{ producto.estadoStock }}
+                  </span>
+                </td>
+
+                <!-- Fecha de creación -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-500">
+                  {{ formatearFecha(producto.fechaCreacion) }}
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div class="flex justify-end space-x-2">
+                    <button
+                      class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-blue-600 bg-blue-100 hover:bg-blue-200 transition-all duration-200"
+                      (click)="editarProducto(producto)"
+                      [disabled]="loadingStates().updating"
+                    >
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                      Editar
+                    </button>
+
+                    <button
+                      class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md text-red-600 bg-red-100 hover:bg-red-200 transition-all duration-200 disabled:opacity-50"
+                      (click)="confirmarEliminar(producto.id)"
+                      [disabled]="!producto.eliminable || loadingStates().deleting"
+                    >
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                      Eliminar
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+} @else if (!loadingStates().listing) {
+  <!-- Estado vacío -->
+  <div class="flex flex-col items-center py-16 text-center bg-white rounded-xl shadow-sm border border-neutral-200 max-w-7xl mx-auto">
+    <div class="w-16 h-16 flex items-center justify-center bg-neutral-100 rounded-full mb-6">
+      <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M9 5l3-3 3 3"></path>
+      </svg>
+    </div>
+
+    <h3 class="text-xl font-semibold text-neutral-900 mb-2">
+      @if (searchTerm()) {
+        No se encontraron productos
+      } @else {
+        No hay productos registrados
+      }
+    </h3>
+
+    <p class="text-neutral-600 mb-8 max-w-md mx-auto">
+      @if (searchTerm()) {
+        No hay productos que coincidan con "{{ searchTerm() }}".
+        <button class="text-blue-500 underline hover:text-blue-600 ml-1" (click)="limpiarBusqueda()">
+          Limpiar búsqueda
+        </button>
+      } @else {
+        Comienza agregando tu primer producto al inventario.
+      }
+    </p>
+
+    @if (!searchTerm()) {
+      <button
+        class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md"
+        (click)="crearProducto()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+        </svg>
+        Crear Primer Producto
+      </button>
+    }
+  </div>
+}
+
+<!-- Modal de confirmación para eliminar -->
+@if (showDeleteConfirm()) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm" (click)="cancelarEliminar()">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-11/12 max-h-screen overflow-y-auto" (click)="$event.stopPropagation()">
+      <div class="flex justify-between items-center p-6 pb-0">
+        <h3 class="text-lg font-semibold text-neutral-900">Confirmar Eliminación</h3>
+        <button
+          class="text-neutral-400 hover:text-neutral-600 transition-colors duration-200"
+          (click)="cancelarEliminar()"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-6">
+        @if (getProductoToDelete(); as producto) {
+          <div class="flex gap-4 mb-4">
+            <div class="w-12 h-12 flex items-center justify-center bg-yellow-100 rounded-full flex-shrink-0">
+              <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.35 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <p class="text-base font-semibold text-neutral-900 mb-2">
+                ¿Estás seguro de que deseas eliminar este producto?
+              </p>
+
+              <!-- Info del producto a eliminar -->
+              <div class="bg-neutral-50 rounded-lg p-3 mb-3">
+                <div class="flex items-center space-x-3">
+                  <img
+                    class="w-10 h-10 rounded-lg object-cover border border-neutral-200"
+                    [src]="producto.imagenDisplay"
+                    [alt]="producto.nombre"
+                    (error)="onImageError($event, producto)"
+                  />
+                  <div class="min-w-0 flex-1">
+                    <div class="text-sm font-medium text-neutral-900 truncate">
+                      {{ producto.nombre }}
+                    </div>
+                    <div class="text-xs text-neutral-500">
+                      {{ producto.nombreCategoria }} • {{ formatearPrecio(producto.precio) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-sm text-neutral-600">
+                Esta acción no se puede deshacer. Todos los datos asociados al producto se perderán permanentemente.
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="flex gap-3 justify-end p-6 pt-0 border-t border-neutral-200">
+        <button
+          class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-all duration-200"
+          (click)="cancelarEliminar()"
+          [disabled]="loadingStates().deleting"
+        >
+          Cancelar
+        </button>
+
+        <button
+          class="flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-all duration-200 disabled:opacity-50"
+          (click)="eliminarProducto(showDeleteConfirm()!)"
+          [disabled]="loadingStates().deleting"
+        >
+          @if (loadingStates().deleting) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            Eliminando...
+          } @else {
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            </svg>
+            Eliminar Producto
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

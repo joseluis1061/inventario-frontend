@@ -18,6 +18,7 @@ export interface ProductoResponse {
   id: number;
   nombre: string;
   descripcion: string;
+  imagenPlaceholder: string;
   precio: number;
   stockActual: number;
   stockMinimo: number;
@@ -28,10 +29,11 @@ export interface ProductoResponse {
   valorInventario: number;
   eliminable: boolean;
   categoriaPrecio: 'Básico' | 'Estándar' | 'Premium' | 'Lujo';
-  resumenEstado: string;
-  nombreCategoria: string;
   porcentajeStockMinimo: number;
   unidadesFaltantesMinimo: number;
+  nombreCategoria: string;
+  imagenDisplay: string;
+  resumenEstado: string;
 }
 
 /**
@@ -40,6 +42,7 @@ export interface ProductoResponse {
 export interface ProductoCreateRequest {
   nombre: string;
   descripcion: string;
+  imagenPlaceholder?: string;
   precio: number;
   stockMinimo: number;
   categoriaId: number;
@@ -51,6 +54,7 @@ export interface ProductoCreateRequest {
 export interface ProductoUpdateRequest {
   nombre: string;
   descripcion: string;
+  imagenPlaceholder?: string;
   precio: number;
   stockMinimo: number;
   categoriaId: number;
@@ -63,6 +67,7 @@ export interface ProductoBasico {
   id: number;
   nombre: string;
   descripcion?: string;
+  imagenDisplay?: string;
   precio: number;
   stockActual: number;
   nombreCategoria: string;
@@ -179,4 +184,48 @@ export interface ProductoStockVerificacion {
   stockActual: number;
   stockSolicitado: number;
   mensaje: string;
+}
+
+/**
+ * Interface para manejo de imágenes de productos
+ */
+export interface ProductoImagen {
+  id?: number;
+  url: string;
+  esPrincipal: boolean;
+  alt: string;
+  orden?: number;
+}
+
+/**
+ * Configuración para generación de imágenes placeholder
+ */
+export interface ProductoImagenPlaceholderConfig {
+  width?: number;
+  height?: number;
+  backgroundColor?: string;
+  textColor?: string;
+  text?: string;
+  fontSize?: number;
+}
+
+/**
+ * Estados de carga específicos para imágenes
+ */
+export interface ProductoImagenLoadingStates {
+  uploading: boolean;
+  deleting: boolean;
+  generating: boolean;
+}
+
+/**
+ * Validación de imágenes
+ */
+export interface ProductoImagenValidation {
+  maxSize: number; // en bytes
+  allowedFormats: string[];
+  maxWidth?: number;
+  maxHeight?: number;
+  minWidth?: number;
+  minHeight?: number;
 }
