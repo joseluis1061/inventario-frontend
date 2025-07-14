@@ -72,6 +72,19 @@ export const routes: Routes = [
     ]
   },
 
+  // Usuarios con MainLayout
+  {
+    path: 'usuarios',
+    loadComponent: () => import('./layouts/main-layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./features/usuarios/usuarios.routes').then(m => m.USUARIOS_ROUTES)
+      }
+    ]
+  },
+
   // Redirect login
   {
     path: 'login',
