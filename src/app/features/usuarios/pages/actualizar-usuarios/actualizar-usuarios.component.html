@@ -1,1 +1,673 @@
-<p>actualizar-usuarios works!</p>
+<!-- Loading inicial mientras carga el usuario -->
+@if (isLoadingUsuario()) {
+  <div class="flex items-center justify-center py-16">
+    <div class="flex flex-col items-center gap-4 text-neutral-600">
+      <div class="w-8 h-8 border-3 border-neutral-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <span>Cargando usuario...</span>
+    </div>
+  </div>
+} @else {
+  <!-- Header de la página -->
+  <div class="bg-white border-b border-neutral-200 px-8 py-6 mb-8">
+    <div class="flex justify-between items-start max-w-5xl mx-auto">
+      <div class="flex-1">
+        <h1 class="flex items-center gap-3 text-3xl font-bold text-neutral-900 mb-2">
+          <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          {{ pageTitle }}
+        </h1>
+        <p class="text-neutral-600 text-base">
+          @if (esUsuarioActual) {
+            Actualiza tu información personal
+          } @else {
+            Actualiza la información de este usuario
+          }
+        </p>
+      </div>
+
+      <div class="flex gap-3 items-center">
+        <button
+          type="button"
+          class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-3 px-4 rounded-lg transition-all duration-200 border border-neutral-300"
+          (click)="onCancel()"
+          [disabled]="isLoading()"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor principal -->
+  <div class="max-w-5xl mx-auto px-4 sm:px-8 pb-16">
+    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-8">
+
+      <!-- Progress indicator -->
+      <div class="flex items-center mb-12 pb-8 border-b border-neutral-200">
+        <div class="flex items-center gap-4">
+          <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </div>
+          <span class="text-lg font-medium text-neutral-700">Editar Información</span>
+        </div>
+
+        <!-- Indicador de cambios -->
+        @if (hasFormChanges()) {
+          <div class="ml-auto">
+            <span class="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-800 text-sm font-medium rounded-full">
+              <div class="w-2 h-2 bg-amber-500 rounded-full"></div>
+              Hay cambios sin guardar
+            </span>
+          </div>
+        } @else if (usuarioForm.dirty) {
+          <div class="ml-auto">
+            <span class="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              </svg>
+              Sin cambios
+            </span>
+          </div>
+        }
+      </div>
+
+      <!-- Formulario principal -->
+      <form [formGroup]="usuarioForm" (ngSubmit)="onSubmit()" novalidate class="mb-12">
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+          <!-- Columna izquierda - Información personal -->
+          <div class="space-y-6">
+
+            <!-- Campo Username -->
+            <div>
+              <label for="username" class="block text-sm font-medium text-neutral-700 mb-2">
+                Username
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="relative mb-1">
+                <div class="relative flex items-center">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-neutral-500 text-sm">{{'@'}}</span>
+                  </div>
+                  <input
+                    type="text"
+                    id="username"
+                    formControlName="username"
+                    class="w-full pl-8 pr-12 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                    [class.border-red-500]="hasFieldError('username') || usernameDisponible() === false"
+                    [class.border-green-500]="usernameDisponible() === true && !hasFieldError('username')"
+                    placeholder="usuario123"
+                    maxlength="50"
+                    autocomplete="username"
+                    [disabled]="!puedeEditar()"
+                  />
+
+                  <!-- Indicadores de estado del username -->
+                  <div class="absolute right-3 top-1/2 transform -translate-y-1/2 z-10">
+                    @switch (getUsernameFieldState()) {
+                      @case ('checking') {
+                        <div class="flex items-center justify-center w-5 h-5 text-neutral-400">
+                          <div class="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      }
+                      @case ('valid') {
+                        <div class="flex items-center justify-center w-5 h-5 text-green-500">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                          </svg>
+                        </div>
+                      }
+                      @case ('invalid') {
+                        <div class="flex items-center justify-center w-5 h-5 text-red-500">
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                          </svg>
+                        </div>
+                      }
+                    }
+                  </div>
+                </div>
+
+                <!-- Mensaje de error o éxito -->
+                @if (hasFieldError('username')) {
+                  <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ getFieldError('username') }}
+                  </div>
+                } @else if (getUsernameAvailabilityMessage()) {
+                  <div class="flex items-center gap-2 mt-2 text-xs"
+                       [class.text-green-500]="usernameDisponible() === true"
+                       [class.text-red-500]="usernameDisponible() === false"
+                       [class.text-neutral-500]="checkingUsername()">
+                    @switch (getUsernameFieldState()) {
+                      @case ('checking') {
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      }
+                      @case ('valid') {
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      }
+                      @case ('invalid') {
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                      }
+                    }
+                    {{ getUsernameAvailabilityMessage() }}
+                  </div>
+                }
+              </div>
+
+              <!-- Contador de caracteres -->
+              <div class="text-right text-xs text-neutral-500 mt-1">
+                {{ usuarioForm.get('username')?.value?.length || 0 }}/50
+              </div>
+            </div>
+
+            <!-- Campo Nombre Completo -->
+            <div>
+              <label for="nombreCompleto" class="block text-sm font-medium text-neutral-700 mb-2">
+                Nombre Completo
+                <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="nombreCompleto"
+                formControlName="nombreCompleto"
+                class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                [class.border-red-500]="hasFieldError('nombreCompleto')"
+                placeholder="Juan Pérez García"
+                maxlength="100"
+                autocomplete="name"
+                [disabled]="!puedeEditar()"
+              />
+              @if (hasFieldError('nombreCompleto')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('nombreCompleto') }}
+                </div>
+              }
+              <div class="text-right text-xs text-neutral-500 mt-1">
+                {{ usuarioForm.get('nombreCompleto')?.value?.length || 0 }}/100
+              </div>
+            </div>
+
+            <!-- Campo Email -->
+            <div>
+              <label for="email" class="block text-sm font-medium text-neutral-700 mb-2">
+                Email
+                <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg class="w-5 h-5 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                  </svg>
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  formControlName="email"
+                  class="w-full pl-10 pr-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+                  [class.border-red-500]="hasFieldError('email')"
+                  placeholder="usuario@empresa.com"
+                  maxlength="100"
+                  autocomplete="email"
+                  [disabled]="!puedeEditar()"
+                />
+              </div>
+              @if (hasFieldError('email')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('email') }}
+                </div>
+              }
+              <div class="text-right text-xs text-neutral-500 mt-1">
+                {{ usuarioForm.get('email')?.value?.length || 0 }}/100
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Columna derecha - Rol y permisos -->
+          <div class="space-y-6">
+
+            <!-- Campo Rol -->
+            <div>
+              <label for="rolId" class="block text-sm font-medium text-neutral-700 mb-2">
+                Rol
+                <span class="text-red-500">*</span>
+                @if (!puedeCambiarRol()) {
+                  <span class="text-xs text-neutral-500">(Solo lectura)</span>
+                }
+              </label>
+              <select
+                id="rolId"
+                formControlName="rolId"
+                class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm bg-white"
+                [class.border-red-500]="hasFieldError('rolId')"
+                [disabled]="!puedeCambiarRol()"
+              >
+                <option value="">Seleccionar rol</option>
+                @for (rol of roles; track rol.id) {
+                  <option [value]="rol.id">{{ rol.nombre }}</option>
+                }
+              </select>
+              @if (hasFieldError('rolId')) {
+                <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  {{ getFieldError('rolId') }}
+                </div>
+              } @else if (getRolSeleccionado()) {
+                <div class="text-xs text-neutral-600 mt-1">
+                  {{ getRolSeleccionado().descripcion }}
+                </div>
+              }
+            </div>
+
+            <!-- Campo Estado Activo -->
+            <div>
+              <label class="flex items-center cursor-pointer" [class.cursor-not-allowed]="!puedeCambiarEstado()">
+                <input
+                  type="checkbox"
+                  formControlName="activo"
+                  class="w-4 h-4 text-blue-600 bg-white border-neutral-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200"
+                  [disabled]="!puedeCambiarEstado()"
+                />
+                <span class="ml-3 text-sm font-medium text-neutral-700">
+                  Usuario activo
+                  @if (!puedeCambiarEstado()) {
+                    <span class="text-xs text-neutral-500">(Solo lectura)</span>
+                  }
+                </span>
+              </label>
+              <div class="text-xs text-neutral-500 mt-1 ml-7">
+                @if (esUsuarioActual) {
+                  No puedes desactivar tu propia cuenta
+                } @else {
+                  Los usuarios inactivos no pueden iniciar sesión en el sistema
+                }
+              </div>
+            </div>
+
+            <!-- Botón para cambiar contraseña -->
+            <div class="pt-4">
+              <button
+                type="button"
+                class="flex items-center gap-2 bg-amber-100 hover:bg-amber-200 text-amber-800 font-medium py-3 px-4 rounded-lg transition-all duration-200 border border-amber-300"
+                (click)="togglePasswordSection()"
+                [disabled]="!puedeEditar()"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                </svg>
+                @if (showPasswordSection()) {
+                  Cancelar cambio de contraseña
+                } @else {
+                  Cambiar contraseña
+                }
+              </button>
+              @if (!puedeEditar()) {
+                <div class="text-xs text-neutral-500 mt-1">
+                  No tienes permisos para cambiar la contraseña
+                </div>
+              }
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Vista previa del usuario -->
+        @if (usuarioForm.get('nombreCompleto')?.value && usuarioForm.get('nombreCompleto')?.value.trim()) {
+          <div class="mt-12 p-8 bg-neutral-50 rounded-lg border border-neutral-200">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-lg font-semibold text-neutral-800">Vista Previa</h3>
+              @if (hasFormChanges()) {
+                <span class="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
+                  <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  Cambios pendientes
+                </span>
+              }
+            </div>
+            <div class="bg-white border border-neutral-200 rounded-xl p-6 shadow-sm">
+              <div class="flex items-start gap-6">
+                <!-- Avatar preview -->
+                <div class="flex-shrink-0">
+                  <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-lg border-2 border-white shadow-sm">
+                    {{ generarIniciales() }}
+                  </div>
+                </div>
+
+                <!-- Información del usuario -->
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-lg font-semibold text-neutral-900 mb-1 truncate">
+                    {{ usuarioForm.get('nombreCompleto')?.value }}
+                  </h4>
+                  <p class="text-sm text-neutral-600 mb-3">
+                    {{'@' + usuarioForm.get('username')?.value }}
+                  </p>
+
+                  <div class="flex items-center gap-4 text-sm">
+                    @if (usuarioForm.get('email')?.value) {
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-neutral-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"/>
+                          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"/>
+                        </svg>
+                        <span class="text-neutral-600">{{ usuarioForm.get('email')?.value }}</span>
+                      </div>
+                    }
+
+                    @if (getRolSeleccionado()) {
+                      <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                        </svg>
+                        <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                          {{ getRolSeleccionado().nombre }}
+                        </span>
+                      </div>
+                    }
+                  </div>
+                </div>
+
+                <!-- Estado badge -->
+                <div class="flex-shrink-0">
+                  @if (usuarioForm.get('activo')?.value) {
+                    <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Activo</span>
+                  } @else {
+                    <span class="px-3 py-1 bg-red-100 text-red-800 text-xs font-medium rounded-full">Inactivo</span>
+                  }
+                  @if (esUsuarioActual) {
+                    <span class="ml-2 px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">Tú</span>
+                  }
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Acciones del formulario principal -->
+        <div class="flex justify-between items-center mt-12 pt-8 border-t border-neutral-200">
+          <div class="flex gap-4 items-center">
+            <button
+              type="button"
+              class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              (click)="onReset()"
+              [disabled]="isLoading() || !usuarioForm.dirty"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Restablecer
+            </button>
+          </div>
+
+          <div class="flex gap-4 items-center">
+            <button
+              type="button"
+              class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-all duration-200"
+              (click)="onCancel()"
+              [disabled]="isLoading()"
+            >
+              Cancelar
+            </button>
+
+            @if (showSubmitButton && puedeEditar()) {
+              <button
+                type="submit"
+                class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                [disabled]="!isFormReady"
+                [class.bg-neutral-400]="!hasFormChanges() && !isLoading()"
+                [class.hover:bg-neutral-400]="!hasFormChanges() && !isLoading()"
+              >
+                @if (isLoading()) {
+                  <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Actualizando...
+                } @else if (!hasFormChanges()) {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Sin cambios
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  Guardar Cambios
+                }
+              </button>
+            }
+          </div>
+        </div>
+
+      </form>
+
+      <!-- Sección de cambio de contraseña -->
+      @if (showPasswordSection()) {
+        <div class="border-t border-neutral-200 pt-12">
+          <div class="flex items-center gap-3 mb-8">
+            <div class="w-8 h-8 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
+              🔑
+            </div>
+            <h3 class="text-lg font-semibold text-neutral-800">Cambiar Contraseña</h3>
+          </div>
+
+          <form [formGroup]="passwordForm" (ngSubmit)="onSubmitPassword()" novalidate>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+              <!-- Contraseña actual -->
+              <div>
+                <label for="passwordActual" class="block text-sm font-medium text-neutral-700 mb-2">
+                  Contraseña Actual
+                  <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  id="passwordActual"
+                  formControlName="passwordActual"
+                  class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 text-sm"
+                  [class.border-red-500]="hasFieldError('passwordActual', passwordForm)"
+                  placeholder="••••••••"
+                  autocomplete="current-password"
+                />
+                @if (hasFieldError('passwordActual', passwordForm)) {
+                  <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ getFieldError('passwordActual', passwordForm) }}
+                  </div>
+                }
+              </div>
+
+              <!-- Nueva contraseña -->
+              <div>
+                <label for="passwordNuevo" class="block text-sm font-medium text-neutral-700 mb-2">
+                  Nueva Contraseña
+                  <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  id="passwordNuevo"
+                  formControlName="passwordNuevo"
+                  class="w-full px-3 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 text-sm"
+                  [class.border-red-500]="hasFieldError('passwordNuevo', passwordForm)"
+                  placeholder="••••••••"
+                  autocomplete="new-password"
+                />
+                @if (hasFieldError('passwordNuevo', passwordForm)) {
+                  <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ getFieldError('passwordNuevo', passwordForm) }}
+                  </div>
+                } @else if (passwordForm.get('passwordNuevo')?.value) {
+                  <!-- Indicador de fortaleza de contraseña -->
+                  <div class="mt-2">
+                    <div class="flex items-center gap-2 text-xs">
+                      <span class="text-neutral-600">Fortaleza:</span>
+                      <span [class]="'font-medium text-' + getPasswordStrength().color + '-600'">
+                        {{ getPasswordStrength().text }}
+                      </span>
+                    </div>
+                    <div class="w-full bg-neutral-200 rounded-full h-1.5 mt-1">
+                      <div
+                        class="h-1.5 rounded-full transition-all duration-300"
+                        [class]="'bg-' + getPasswordStrength().color + '-500'"
+                        [style.width.%]="(getPasswordStrength().level / 6) * 100"
+                      ></div>
+                    </div>
+                  </div>
+                }
+              </div>
+
+              <!-- Confirmar nueva contraseña -->
+              <div>
+                <label for="confirmPasswordNuevo" class="block text-sm font-medium text-neutral-700 mb-2">
+                  Confirmar Nueva Contraseña
+                  <span class="text-red-500">*</span>
+                </label>
+                <div class="relative">
+                  <input
+                    type="password"
+                    id="confirmPasswordNuevo"
+                    formControlName="confirmPasswordNuevo"
+                    class="w-full px-3 pr-10 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all duration-200 text-sm"
+                    [class.border-red-500]="hasFieldError('confirmPasswordNuevo', passwordForm) || (passwordForm.get('confirmPasswordNuevo')?.value && !passwordsMatch())"
+                    [class.border-green-500]="passwordForm.get('confirmPasswordNuevo')?.value && passwordsMatch()"
+                    placeholder="••••••••"
+                    autocomplete="new-password"
+                  />
+
+                  <!-- Indicador de coincidencia -->
+                  @if (passwordForm.get('confirmPasswordNuevo')?.value) {
+                    <div class="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      @if (passwordsMatch()) {
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                      } @else {
+                        <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                      }
+                    </div>
+                  }
+                </div>
+                @if (hasFieldError('confirmPasswordNuevo', passwordForm) || (passwordForm.get('confirmPasswordNuevo')?.value && !passwordsMatch())) {
+                  <div class="flex items-center gap-2 mt-2 text-xs text-red-500">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ getFieldError('confirmPasswordNuevo', passwordForm) }}
+                  </div>
+                } @else if (passwordForm.get('confirmPasswordNuevo')?.value && passwordsMatch()) {
+                  <div class="flex items-center gap-2 mt-2 text-xs text-green-500">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Las contraseñas coinciden
+                  </div>
+                }
+              </div>
+
+            </div>
+
+            <!-- Acciones del formulario de contraseña -->
+            <div class="flex justify-between items-center mt-8 pt-6 border-t border-neutral-200">
+              <div class="text-sm text-neutral-600">
+                <p>La nueva contraseña debe tener al menos 6 caracteres, incluyendo letras y números.</p>
+              </div>
+
+              <div class="flex gap-3">
+                <button
+                  type="button"
+                  class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-all duration-200"
+                  (click)="togglePasswordSection()"
+                  [disabled]="loadingStates().changingPassword"
+                >
+                  Cancelar
+                </button>
+
+                <button
+                  type="submit"
+                  class="flex items-center gap-2 bg-amber-500 hover:bg-amber-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                  [disabled]="!isPasswordFormReady"
+                >
+                  @if (loadingStates().changingPassword) {
+                    <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Cambiando...
+                  } @else {
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1721 9z"/>
+                    </svg>
+                    Cambiar Contraseña
+                  }
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      }
+
+      <!-- Información del usuario original -->
+      @if (usuarioOriginal()) {
+        <div class="mt-12 p-6 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+          <h4 class="flex items-center gap-2 text-base font-medium text-blue-600 mb-3">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Información del usuario
+          </h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-blue-600">
+            <div class="text-sm">
+              <span class="font-medium">Creado:</span>
+              {{ usuarioOriginal()!.fechaCreacion | date:'medium':'es' }}
+            </div>
+            <div class="text-sm">
+              <span class="font-medium">Estado:</span>
+              {{ usuarioOriginal()!.estadoTexto }}
+            </div>
+            @if (usuarioOriginal()!.esAdminPrincipal) {
+              <div class="text-sm md:col-span-2">
+                <span class="font-medium">Nota:</span> Este es el administrador principal del sistema y no puede ser eliminado ni desactivado.
+              </div>
+            }
+            @if (!puedeEditar()) {
+              <div class="text-sm md:col-span-2">
+                <span class="font-medium">Permisos:</span>
+                @if (esUsuarioActual) {
+                  Puedes editar tu propia información personal, pero no tu rol ni estado.
+                } @else {
+                  Solo los administradores pueden editar otros usuarios.
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+}
