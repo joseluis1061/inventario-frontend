@@ -1,0 +1,496 @@
+<!-- Header de la página -->
+<div class="bg-white border-b border-neutral-200 px-8 py-6 mb-8">
+  <div class="flex justify-between items-start max-w-5xl mx-auto">
+    <div class="flex-1">
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-neutral-900 mb-2">
+        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        {{ pageTitle }}
+      </h1>
+      <p class="text-neutral-600 text-base">
+        Modificar información y permisos del rol
+      </p>
+    </div>
+
+    <div class="flex gap-3 items-center">
+      <button
+        type="button"
+        class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-3 px-4 rounded-lg transition-all duration-200 border border-neutral-300"
+        (click)="onCancel()"
+        [disabled]="isLoading()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Indicador de carga inicial -->
+@if (isLoadingRol()) {
+  <div class="flex items-center justify-center py-16 max-w-5xl mx-auto">
+    <div class="flex flex-col items-center gap-4 text-neutral-600">
+      <div class="w-8 h-8 border-3 border-neutral-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <span>Cargando información del rol...</span>
+    </div>
+  </div>
+}
+
+<!-- Contenido principal -->
+@if (!isLoadingRol() && rolOriginal()) {
+  <div class="max-w-5xl mx-auto px-8 pb-8">
+
+    <!-- Verificación de permisos -->
+    @if (!puedeEditar()) {
+      <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6 mb-8">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center flex-shrink-0">
+            <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-lg font-semibold text-yellow-900 mb-2">
+              @if (esRolSistema) {
+                Rol Protegido del Sistema
+              } @else {
+                Sin Permisos de Edición
+              }
+            </h3>
+            <p class="text-yellow-700 mb-4">
+              {{ mensajeRestriccion }}
+            </p>
+            <button
+              type="button"
+              class="flex items-center gap-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200"
+              (click)="onCancel()"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+              </svg>
+              Volver a Roles
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      <!-- Formulario principal -->
+      <div class="lg:col-span-2">
+        <form [formGroup]="rolForm" (ngSubmit)="onSubmit()" class="space-y-6">
+
+          <!-- Información básica -->
+          <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+            <h3 class="text-lg font-semibold text-neutral-900 mb-6 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Información del Rol
+            </h3>
+
+            <div class="space-y-6">
+              <!-- Campo Nombre -->
+              <div>
+                <label for="nombre" class="block text-sm font-medium text-neutral-700 mb-2">
+                  Nombre del Rol *
+                </label>
+                <div class="relative">
+                  <input
+                    type="text"
+                    id="nombre"
+                    formControlName="nombre"
+                    placeholder="Ej: SUPERVISOR, COORDINADOR, ANALISTA"
+                    class="w-full px-4 py-3 border rounded-lg text-sm transition-all duration-200 pr-10"
+                    [class]="hasFieldError('nombre', 'required') || hasFieldError('nombre', 'pattern') || hasFieldError('nombre', 'minlength') || hasFieldError('nombre', 'maxlength') ?
+                            'border-red-300 focus:border-red-500 focus:ring-red-500' :
+                            nombreEstado === 'available' ? 'border-green-300 focus:border-green-500 focus:ring-green-500' :
+                            nombreEstado === 'unavailable' ? 'border-red-300 focus:border-red-500 focus:ring-red-500' :
+                            'border-neutral-300 focus:border-blue-500 focus:ring-blue-500'"
+                    [disabled]="!puedeEditar()"
+                    (input)="onNombreInput($event)"
+                  />
+
+                  <!-- Indicadores de estado del nombre -->
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                    @if (checkingNombre()) {
+                      <div class="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
+                    } @else if (nombreEstado === 'available') {
+                      <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                    } @else if (nombreEstado === 'unavailable') {
+                      <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                    }
+                  </div>
+                </div>
+
+                <!-- Mensajes de validación y estado -->
+                @if (getFieldError('nombre')) {
+                  <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    {{ getFieldError('nombre') }}
+                  </p>
+                }
+
+                @if (nombreEstado === 'unavailable') {
+                  <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    Este nombre de rol ya existe en el sistema
+                  </p>
+                }
+
+                @if (nombreEstado === 'available' && hasFormChanges()) {
+                  <p class="mt-2 text-sm text-green-600 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Nombre disponible
+                  </p>
+                }
+
+                <!-- Convenciones de nomenclatura -->
+                @if (!nombreSigueConvenciones && rolForm.get('nombre')?.value && puedeEditar()) {
+                  <p class="mt-2 text-sm text-yellow-600 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    Recomendado: Solo mayúsculas, números y guiones bajos
+                  </p>
+                }
+
+                <!-- Información del rol del sistema -->
+                @if (esRolSistema) {
+                  <p class="mt-2 text-sm text-blue-600 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    Este es un rol del sistema y está protegido contra modificaciones
+                  </p>
+                }
+              </div>
+
+              <!-- Campo Descripción -->
+              <div>
+                <div class="flex justify-between items-center mb-2">
+                  <label for="descripcion" class="block text-sm font-medium text-neutral-700">
+                    Descripción *
+                  </label>
+                  @if (puedeEditar()) {
+                    <span class="text-xs" [class]="claseContadorCaracteres">
+                      {{ caracteresRestantesDescripcion }} caracteres restantes
+                    </span>
+                  }
+                </div>
+                <textarea
+                  id="descripcion"
+                  formControlName="descripcion"
+                  rows="4"
+                  placeholder="Describe las responsabilidades y permisos de este rol..."
+                  class="w-full px-4 py-3 border rounded-lg text-sm transition-all duration-200 resize-none"
+                  [class]="hasFieldError('descripcion', 'required') || hasFieldError('descripcion', 'minlength') || hasFieldError('descripcion', 'maxlength') ?
+                          'border-red-300 focus:border-red-500 focus:ring-red-500' :
+                          'border-neutral-300 focus:border-blue-500 focus:ring-blue-500'"
+                  [disabled]="!puedeEditar()"
+                ></textarea>
+
+                @if (getFieldError('descripcion')) {
+                  <p class="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                    </svg>
+                    {{ getFieldError('descripcion') }}
+                  </p>
+                }
+
+                <!-- Botón para generar descripción automática -->
+                @if (puedeEditar()) {
+                  <div class="mt-3">
+                    <button
+                      type="button"
+                      class="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+                      (click)="generarDescripcionAuto()"
+                      [disabled]="!rolForm.get('nombre')?.value"
+                    >
+                      🤖 Generar descripción automática
+                    </button>
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- Acciones del formulario -->
+          @if (puedeEditar()) {
+            <div class="flex justify-between items-center">
+              <div class="flex gap-4 items-center">
+                <button
+                  type="button"
+                  class="flex items-center gap-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium py-2 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  (click)="onReset()"
+                  [disabled]="isLoading() || !rolForm.dirty"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  Restaurar
+                </button>
+              </div>
+
+              <div class="flex gap-4 items-center">
+                <button
+                  type="button"
+                  class="px-4 py-2 bg-neutral-100 hover:bg-neutral-200 text-neutral-700 font-medium rounded-lg transition-all duration-200"
+                  (click)="onCancel()"
+                  [disabled]="isLoading()"
+                >
+                  Cancelar
+                </button>
+
+                @if (showSubmitButton && hasFormChanges()) {
+                  <button
+                    type="submit"
+                    class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                    [disabled]="!isFormReady"
+                  >
+                    @if (isLoading()) {
+                      <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Actualizando...
+                    } @else {
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      Actualizar Rol
+                    }
+                  </button>
+                } @else if (!hasFormChanges() && !isLoading()) {
+                  <div class="flex items-center gap-2 text-sm text-neutral-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Sin cambios para guardar
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+        </form>
+      </div>
+
+      <!-- Sidebar con información del rol -->
+      <div class="lg:col-span-1 space-y-6">
+
+        <!-- Información actual del rol -->
+        @if (rolOriginal(); as rol) {
+          <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+            <h4 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Información Actual
+            </h4>
+
+            <div class="space-y-4">
+              <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getRolIcono(rol.nombre)"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-base font-semibold text-neutral-900 mb-1">
+                    {{ rol.nombre }}
+                  </h4>
+                  <p class="text-sm text-neutral-600 mb-3 line-clamp-3">
+                    {{ rol.descripcion }}
+                  </p>
+                  <div class="flex items-center gap-2 text-xs">
+                    <span [class]="rol.esRolSistema ? 'px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium' : 'px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium'">
+                      {{ rol.esRolSistema ? 'Sistema' : 'Personalizado' }}
+                    </span>
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                      {{ rol.estadoTexto }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-4 border-t border-neutral-200 space-y-3 text-sm">
+                <div>
+                  <span class="font-medium text-neutral-700">Creado:</span>
+                  <span class="text-neutral-600 ml-2">{{ formatearFecha(rol.fechaCreacion) }}</span>
+                </div>
+                <div>
+                  <span class="font-medium text-neutral-700">ID:</span>
+                  <span class="text-neutral-600 ml-2">#{{ rol.id }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Vista previa de cambios -->
+        @if (vistaPrevia && hasFormChanges(); as preview) {
+          <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+            <h4 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+              </svg>
+              Vista Previa
+            </h4>
+
+            <div class="border border-green-200 rounded-lg p-4 bg-green-50">
+              <div class="flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getRolIcono(preview.nombre)"/>
+                  </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-base font-semibold text-neutral-900 mb-1">
+                    {{ preview.nombre }}
+                  </h4>
+                  <p class="text-sm text-neutral-600 mb-3 line-clamp-3">
+                    {{ preview.descripcion }}
+                  </p>
+                  <div class="flex items-center gap-2 text-xs">
+                    <span class="px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
+                      Personalizado
+                    </span>
+                    <span class="px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                      {{ preview.estadoTexto }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Buenas prácticas -->
+        @if (puedeEditar()) {
+          <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+            <h4 class="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+              Consejos de Edición
+            </h4>
+            <div class="space-y-3 text-sm text-neutral-600">
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Mantén nombres en <strong>MAYÚSCULAS</strong> para consistencia</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Actualiza la descripción si cambias el nombre</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Considera el impacto en usuarios existentes</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-yellow-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+                </svg>
+                <span>Los cambios afectarán a todos los usuarios con este rol</span>
+              </div>
+            </div>
+          </div>
+        }
+
+        <!-- Información de seguridad -->
+        <div class="bg-blue-50 rounded-xl border border-blue-200 p-6">
+          <h4 class="text-base font-semibold text-blue-900 mb-4 flex items-center gap-2">
+            <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Información Importante
+          </h4>
+          <div class="space-y-3 text-sm text-blue-800">
+            @if (esRolSistema) {
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <span>Este rol está <strong>protegido</strong> contra modificaciones</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <span>Los roles del sistema mantienen la <strong>seguridad</strong> del aplicativo</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+                <span>Solo puedes crear nuevos roles <strong>personalizados</strong></span>
+              </div>
+            } @else {
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Los cambios se aplicarán <strong>inmediatamente</strong> a todos los usuarios</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Asegúrate de que el nombre sea <strong>único</strong> en el sistema</span>
+              </div>
+              <div class="flex items-start gap-2">
+                <svg class="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Los cambios no afectan roles <strong>del sistema</strong></span>
+              </div>
+            }
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Estado de error o rol no encontrado -->
+@if (!isLoadingRol() && !rolOriginal()) {
+  <div class="flex flex-col items-center justify-center py-16 max-w-5xl mx-auto">
+    <svg class="w-16 h-16 text-neutral-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+    </svg>
+    <h3 class="text-lg font-semibold text-neutral-900 mb-2">Rol no encontrado</h3>
+    <p class="text-neutral-600 text-center mb-6 max-w-md">
+      El rol que intentas editar no existe o ha sido eliminado del sistema.
+    </p>
+    <button
+      class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200"
+      (click)="onCancel()"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Volver a Roles
+    </button>
+  </div>
+}

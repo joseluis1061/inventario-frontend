@@ -127,6 +127,7 @@ export class MainLayoutComponent implements OnInit, OnDestroy {
       'movimientos': 'Movimientos',
       'reportes': 'Reportes',
       'usuarios': 'Usuarios',
+      'roles': 'Roles',
       'configuracion': 'Configuración'
     };
     return titles[route] || 'Página';

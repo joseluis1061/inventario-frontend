@@ -85,6 +85,19 @@ export const routes: Routes = [
     ]
   },
 
+  // Roles con MainLayout
+  {
+    path: 'roles',
+    loadComponent: () => import('./layouts/main-layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./features/roles/roles.routes').then(m => m.ROLES_ROUTES)
+      }
+    ]
+  },
+
   // Redirect login
   {
     path: 'login',

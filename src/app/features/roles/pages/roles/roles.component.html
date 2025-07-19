@@ -1,0 +1,369 @@
+<!-- Header con título y botón crear -->
+<div class="bg-white border-b border-neutral-200 px-8 py-6 mb-8">
+  <div class="flex justify-between items-start max-w-7xl mx-auto">
+    <div class="flex-1">
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-neutral-900 mb-2">
+        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+        </svg>
+        Roles
+      </h1>
+      <p class="text-neutral-600 text-base">
+        Gestiona los roles y permisos de usuarios en el sistema
+      </p>
+    </div>
+
+    <div class="flex gap-3 items-center">
+      <button
+        class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        (click)="crearRol()"
+        [disabled]="loadingStates().creating"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+        Nuevo Rol
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Barra de búsqueda y filtros -->
+<div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-8 max-w-7xl mx-auto">
+  <div class="flex gap-4 items-center">
+    <!-- Búsqueda -->
+    <div class="relative flex-1">
+      <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+      </svg>
+      <input
+        type="text"
+        class="w-full pl-11 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+        placeholder="Buscar roles por nombre o descripción..."
+        [value]="searchTerm()"
+        (input)="onSearch($event)"
+      />
+    </div>
+
+    <!-- Filtro por tipo -->
+    <div class="flex gap-2">
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+        [class]="selectedTipoRol() === null ? 'bg-blue-500 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'"
+        (click)="filtrarPorTipo(null)"
+      >
+        Todos
+      </button>
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+        [class]="selectedTipoRol() === 'sistema' ? 'bg-blue-500 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'"
+        (click)="filtrarPorTipo('sistema')"
+      >
+        Sistema
+      </button>
+      <button
+        class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+        [class]="selectedTipoRol() === 'personalizado' ? 'bg-blue-500 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'"
+        (click)="filtrarPorTipo('personalizado')"
+      >
+        Personalizados
+      </button>
+    </div>
+
+    <!-- Botón limpiar filtros -->
+    <button
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors duration-200"
+      (click)="limpiarFiltros()"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Limpiar
+    </button>
+  </div>
+</div>
+
+<!-- Estadísticas -->
+@if (!loadingStates().listing && roles().length > 0) {
+  <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-8 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="text-center">
+        <div class="text-2xl font-bold text-neutral-900">{{ totalRoles }}</div>
+        <div class="text-sm text-neutral-600">Total Roles</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-blue-600">{{ rolesSistema }}</div>
+        <div class="text-sm text-neutral-600">Roles Sistema</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-purple-600">{{ rolesPersonalizados }}</div>
+        <div class="text-sm text-neutral-600">Personalizados</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-green-600">{{ rolesDisponibles }}</div>
+        <div class="text-sm text-neutral-600">Disponibles</div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Indicador de carga -->
+@if (loadingStates().listing) {
+  <div class="flex items-center justify-center py-12 bg-white rounded-xl shadow-sm border border-neutral-200 max-w-7xl mx-auto">
+    <div class="flex flex-col items-center gap-4 text-neutral-600">
+      <div class="w-8 h-8 border-3 border-neutral-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <span>Cargando roles...</span>
+    </div>
+  </div>
+}
+
+<!-- Tabla de roles -->
+@if (rolesFiltrados.length > 0 && !loadingStates().listing) {
+  <div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+
+      <!-- Header de la tabla -->
+      <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-200">
+        <h3 class="text-lg font-semibold text-neutral-900">
+          Lista de Roles
+          <span class="text-sm font-normal text-neutral-600">
+            ({{ rolesFiltrados.length }} {{ rolesFiltrados.length === 1 ? 'rol' : 'roles' }})
+          </span>
+        </h3>
+      </div>
+
+      <!-- Tabla responsive -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-neutral-200">
+
+          <!-- Cabecera de la tabla -->
+          <thead class="bg-neutral-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors duration-200"
+                  (click)="sortBy('nombre')">
+                <div class="flex items-center gap-2">
+                  Rol
+                  <span class="text-neutral-400">{{ getSortIndicator('nombre') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors duration-200"
+                  (click)="sortBy('descripcion')">
+                <div class="flex items-center gap-2">
+                  Descripción
+                  <span class="text-neutral-400">{{ getSortIndicator('descripcion') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors duration-200"
+                  (click)="sortBy('tipo')">
+                <div class="flex items-center gap-2">
+                  Tipo
+                  <span class="text-neutral-400">{{ getSortIndicator('tipo') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors duration-200"
+                  (click)="sortBy('fechaCreacion')">
+                <div class="flex items-center gap-2">
+                  Fecha Creación
+                  <span class="text-neutral-400">{{ getSortIndicator('fechaCreacion') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+
+          <!-- Cuerpo de la tabla -->
+          <tbody class="bg-white divide-y divide-neutral-200">
+            @for (rol of rolesFiltrados; track trackByRol($index, rol)) {
+              <tr class="hover:bg-neutral-50 transition-colors duration-200">
+
+                <!-- Rol (icono + info) -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getRolIcono(rol.nombre)"/>
+                      </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <h3 class="text-base font-semibold text-neutral-900 break-words">{{ rol.nombre }}</h3>
+                      <p class="text-sm text-neutral-500">ID: {{ rol.id }}</p>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Descripción -->
+                <td class="px-6 py-4">
+                  <div class="max-w-xs">
+                    <p class="text-sm text-neutral-900 line-clamp-2 break-words">{{ rol.descripcion }}</p>
+                  </div>
+                </td>
+
+                <!-- Tipo -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="getTipoRolClass(rol)">
+                    {{ getTipoRolTexto(rol) }}
+                  </span>
+                </td>
+
+                <!-- Estado -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <span [class]="getEstadoClass(rol)">
+                    {{ rol.estadoTexto }}
+                  </span>
+                </td>
+
+                <!-- Fecha creación -->
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-neutral-900">
+                  {{ formatearFecha(rol.fechaCreacion) }}
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div class="flex items-center justify-end gap-2">
+
+                    <!-- Ver detalles -->
+                    <button
+                      class="text-neutral-600 hover:text-blue-600 transition-colors duration-200 p-2 rounded-lg hover:bg-blue-50"
+                      (click)="verRol(rol.id)"
+                      title="Ver detalles"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                      </svg>
+                    </button>
+
+                    <!-- Editar -->
+                    @if (puedeEditar(rol)) {
+                      <button
+                        class="text-neutral-600 hover:text-green-600 transition-colors duration-200 p-2 rounded-lg hover:bg-green-50"
+                        (click)="editarRol(rol.id)"
+                        [disabled]="loadingStates().updating"
+                        title="Editar rol"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                      </button>
+                    }
+
+                    <!-- Eliminar -->
+                    @if (puedeEliminar(rol)) {
+                      <button
+                        class="text-neutral-600 hover:text-red-600 transition-colors duration-200 p-2 rounded-lg hover:bg-red-50"
+                        (click)="confirmarEliminar(rol.id)"
+                        [disabled]="loadingStates().deleting"
+                        title="Eliminar rol"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                      </button>
+                    }
+
+                    <!-- Indicador de rol del sistema -->
+                    @if (rol.esRolSistema && !puedeEditar(rol)) {
+                      <div class="text-xs text-neutral-500 ml-2 px-2 py-1 bg-neutral-100 rounded">
+                        Protegido
+                      </div>
+                    }
+
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Estado vacío -->
+@if (roles().length === 0 && !loadingStates().listing) {
+  <div class="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm border border-neutral-200 max-w-7xl mx-auto">
+    <svg class="w-16 h-16 text-neutral-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+    </svg>
+    <h3 class="text-lg font-semibold text-neutral-900 mb-2">No hay roles disponibles</h3>
+    <p class="text-neutral-600 text-center mb-6 max-w-md">
+      Parece que aún no hay roles en el sistema. Comienza creando tu primer rol.
+    </p>
+    <button
+      class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200"
+      (click)="crearRol()"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+      </svg>
+      Crear Primer Rol
+    </button>
+  </div>
+}
+
+<!-- Estado sin resultados de búsqueda -->
+@if (roles().length > 0 && rolesFiltrados.length === 0 && !loadingStates().listing) {
+  <div class="flex flex-col items-center justify-center py-16 bg-white rounded-xl shadow-sm border border-neutral-200 max-w-7xl mx-auto">
+    <svg class="w-16 h-16 text-neutral-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+    </svg>
+    <h3 class="text-lg font-semibold text-neutral-900 mb-2">No se encontraron resultados</h3>
+    <p class="text-neutral-600 text-center mb-6 max-w-md">
+      No encontramos roles que coincidan con tu búsqueda. Intenta con otros términos o limpia los filtros.
+    </p>
+    <button
+      class="flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+      (click)="limpiarFiltros()"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+      </svg>
+      Limpiar filtros
+    </button>
+  </div>
+}
+
+<!-- Modal de confirmación de eliminación -->
+@if (showDeleteConfirm() !== null) {
+  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+          <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-neutral-900">Confirmar eliminación</h3>
+      </div>
+
+      <p class="text-neutral-600 mb-6">
+        ¿Estás seguro de que deseas eliminar este rol? Esta acción no se puede deshacer y podría afectar a los usuarios que tienen asignado este rol.
+      </p>
+
+      <div class="flex gap-3 justify-end">
+        <button
+          class="px-4 py-2 text-sm font-medium text-neutral-700 bg-neutral-100 hover:bg-neutral-200 rounded-lg transition-colors duration-200"
+          (click)="cancelarEliminar()"
+          [disabled]="loadingStates().deleting"
+        >
+          Cancelar
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors duration-200 flex items-center gap-2"
+          (click)="eliminarRol(showDeleteConfirm()!)"
+          [disabled]="loadingStates().deleting"
+        >
+          @if (loadingStates().deleting) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+          }
+          Eliminar
+        </button>
+      </div>
+    </div>
+  </div>
+}
