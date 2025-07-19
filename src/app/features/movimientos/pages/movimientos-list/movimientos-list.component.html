@@ -1,0 +1,476 @@
+<!-- Header con título y botones de acción -->
+<div class="bg-white border-b border-neutral-200 px-8 py-6 mb-8">
+  <div class="flex justify-between items-start max-w-7xl mx-auto">
+    <div class="flex-1">
+      <h1 class="flex items-center gap-3 text-3xl font-bold text-neutral-900 mb-2">
+        <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+        </svg>
+        Movimientos
+      </h1>
+      <p class="text-neutral-600 text-base">
+        Registra y gestiona todas las entradas y salidas de inventario
+      </p>
+    </div>
+
+    <div class="flex gap-3 items-center">
+      <!-- Botón Estadísticas -->
+      <button
+        class="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        (click)="verEstadisticas()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+        </svg>
+        Estadísticas
+      </button>
+
+      <!-- Botón Historial -->
+      <button
+        class="flex items-center gap-2 bg-neutral-500 hover:bg-neutral-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-neutral-500 focus:ring-offset-2"
+        (click)="verHistorial()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        Historial
+      </button>
+
+      <!-- Botón Crear Movimiento -->
+      @if (puedeCrear()) {
+        <button
+          class="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          (click)="crearMovimiento()"
+          [disabled]="loadingStates().creating"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+          </svg>
+          Nuevo Movimiento
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Barra de búsqueda y filtros -->
+<div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-8 max-w-7xl mx-auto">
+  <div class="space-y-4">
+    <!-- Primera fila: Búsqueda y botones principales -->
+    <div class="flex gap-4 items-center">
+      <!-- Búsqueda -->
+      <div class="relative flex-1">
+        <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <input
+          type="text"
+          class="w-full pl-11 pr-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 text-sm"
+          placeholder="Buscar por producto, motivo, usuario..."
+          [value]="searchTerm()"
+          (input)="onSearch($event)"
+        />
+      </div>
+
+      <!-- Filtros rápidos por tipo -->
+      <div class="flex gap-2">
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+          [class]="selectedTipo() === null ? 'bg-blue-500 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'"
+          (click)="filtrarPorTipo(null)"
+        >
+          Todos
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+          [class]="selectedTipo() === 'ENTRADA' ? 'bg-green-500 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'"
+          (click)="filtrarPorTipo('ENTRADA')"
+        >
+          Entradas
+        </button>
+        <button
+          class="px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200"
+          [class]="selectedTipo() === 'SALIDA' ? 'bg-red-500 text-white' : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'"
+          (click)="filtrarPorTipo('SALIDA')"
+        >
+          Salidas
+        </button>
+      </div>
+
+      <!-- Botón de filtros avanzados -->
+      <button
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-all duration-200"
+        (click)="toggleFiltros()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.414A1 1 0 013 6.707V4z"/>
+        </svg>
+        Filtros
+        <svg class="w-4 h-4 transition-transform duration-200" [class.rotate-180]="showFilters()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+
+      <!-- Botón recargar -->
+      <button
+        class="p-2 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-all duration-200"
+        (click)="recargar()"
+        [disabled]="loadingStates().listing"
+        title="Recargar datos"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+      </button>
+
+      <!-- Botón limpiar filtros -->
+      <button
+        class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors duration-200"
+        (click)="limpiarFiltros()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Limpiar
+      </button>
+    </div>
+
+    <!-- Filtros avanzados (desplegable) -->
+    @if (showFilters()) {
+      <div class="border-t border-neutral-200 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Filtro por producto -->
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Producto</label>
+          <select
+            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            [value]="selectedProducto() || ''"
+            (change)="onProductoChange($event)"
+          >
+            <option value="">Todos los productos</option>
+            @for (producto of productos(); track producto.id) {
+              <option [value]="producto.id">{{ producto.nombre }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Filtro por usuario -->
+        <div>
+          <label class="block text-sm font-medium text-neutral-700 mb-2">Usuario</label>
+          <select
+            class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+            [value]="selectedUsuario() || ''"
+            (change)="onUsuarioChange($event)"
+          >
+            <option value="">Todos los usuarios</option>
+            @for (usuario of usuarios(); track usuario.id) {
+              <option [value]="usuario.id">{{ usuario.nombreCompleto }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Información de filtros activos -->
+      <div class="flex items-end">
+        <div class="text-sm text-neutral-600">
+          <span class="font-medium">Filtros activos:</span>
+          {{ (selectedTipo() ? 1 : 0) + (selectedProducto() ? 1 : 0) + (selectedUsuario() ? 1 : 0) + (searchTerm() ? 1 : 0) }}
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Estadísticas -->
+@if (!loadingStates().listing && movimientos().length > 0) {
+  <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6 mb-8 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div class="text-center">
+        <div class="text-2xl font-bold text-neutral-900">{{ totalMovimientos }}</div>
+        <div class="text-sm text-neutral-600">Total Movimientos</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-green-600">{{ totalEntradas }}</div>
+        <div class="text-sm text-neutral-600">Entradas</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-red-600">{{ totalSalidas }}</div>
+        <div class="text-sm text-neutral-600">Salidas</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-blue-600">{{ formatearPrecio(valorTotalMovimientos) }}</div>
+        <div class="text-sm text-neutral-600">Valor Total</div>
+      </div>
+      <div class="text-center">
+        <div class="text-2xl font-bold text-purple-600">{{ movimientosRecientes }}</div>
+        <div class="text-sm text-neutral-600">Últimas 24h</div>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Indicador de carga -->
+@if (loadingStates().listing) {
+  <div class="flex items-center justify-center py-12 bg-white rounded-xl shadow-sm border border-neutral-200 max-w-7xl mx-auto">
+    <div class="flex flex-col items-center gap-4 text-neutral-600">
+      <div class="w-8 h-8 border-3 border-neutral-200 border-t-blue-500 rounded-full animate-spin"></div>
+      <span>Cargando movimientos...</span>
+    </div>
+  </div>
+}
+
+<!-- Tabla de movimientos -->
+@if (movimientosFiltrados.length > 0 && !loadingStates().listing) {
+  <div class="max-w-7xl mx-auto">
+    <div class="bg-white rounded-xl shadow-sm border border-neutral-200 overflow-hidden">
+
+      <!-- Header de la tabla -->
+      <div class="bg-neutral-50 px-6 py-4 border-b border-neutral-200">
+        <h3 class="text-lg font-semibold text-neutral-900">
+          Lista de Movimientos
+          <span class="text-sm font-normal text-neutral-600">
+            ({{ movimientosFiltrados.length }} {{ movimientosFiltrados.length === 1 ? 'movimiento' : 'movimientos' }})
+          </span>
+        </h3>
+      </div>
+
+      <!-- Tabla responsive -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-neutral-200">
+
+          <!-- Cabecera de la tabla -->
+          <thead class="bg-neutral-50">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors"
+                  (click)="onSort('fecha')">
+                <div class="flex items-center gap-2">
+                  Fecha
+                  <span class="text-neutral-400">{{ getSortIcon('fecha') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors"
+                  (click)="onSort('tipo')">
+                <div class="flex items-center gap-2">
+                  Tipo
+                  <span class="text-neutral-400">{{ getSortIcon('tipo') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors"
+                  (click)="onSort('producto')">
+                <div class="flex items-center gap-2">
+                  Producto
+                  <span class="text-neutral-400">{{ getSortIcon('producto') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors"
+                  (click)="onSort('cantidad')">
+                <div class="flex items-center gap-2">
+                  Cantidad
+                  <span class="text-neutral-400">{{ getSortIcon('cantidad') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Motivo
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors"
+                  (click)="onSort('usuario')">
+                <div class="flex items-center gap-2">
+                  Usuario
+                  <span class="text-neutral-400">{{ getSortIcon('usuario') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider cursor-pointer hover:bg-neutral-100 transition-colors"
+                  (click)="onSort('valor')">
+                <div class="flex items-center gap-2">
+                  Valor
+                  <span class="text-neutral-400">{{ getSortIcon('valor') }}</span>
+                </div>
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Impacto
+              </th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+
+          <!-- Cuerpo de la tabla -->
+          <tbody class="bg-white divide-y divide-neutral-200">
+            @for (movimiento of movimientosFiltrados; track trackByMovimiento($index, movimiento)) {
+              <tr class="hover:bg-neutral-50 transition-colors duration-200">
+
+                <!-- Fecha -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm text-neutral-900">{{ formatearFecha(movimiento.fecha) }}</div>
+                  <div class="text-xs text-neutral-500">{{ formatearFechaRelativa(movimiento.fecha) }}</div>
+                </td>
+
+                <!-- Tipo -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center w-8 h-8 rounded-full" [style.background-color]="movimiento.colorTipo">
+                      <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        @if (movimiento.tipoMovimiento === 'ENTRADA') {
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4l-8 8h16l-8-8z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16"/>
+                        } @else {
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20l8-8H4l8 8z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20V4"/>
+                        }
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getTipoMovimientoClass(movimiento.tipoMovimiento)">
+                        {{ movimiento.tipoMovimiento }}
+                      </span>
+                      <div class="text-xs text-neutral-500 mt-1">{{ movimiento.descripcionTipo }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Producto -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-10 h-10 rounded-lg" [style.background-color]="movimiento.producto.colorCategoria + '20'">
+                      <svg class="w-5 h-5" [style.color]="movimiento.producto.colorCategoria" fill="currentColor" viewBox="0 0 24 24">
+                        <!-- Icono dinámico según la categoría del producto -->
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <button
+                        class="text-sm font-medium text-neutral-900 hover:text-blue-600 transition-colors cursor-pointer text-left"
+                        (click)="verMovimientosProducto(movimiento.producto.id)"
+                        title="Ver movimientos de este producto"
+                      >
+                        {{ movimiento.producto.nombre }}
+                      </button>
+                      <div class="text-xs text-neutral-500">{{ movimiento.producto.nombreCategoria }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Cantidad -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-semibold text-neutral-900">{{ movimiento.cantidad }}</div>
+                  <div class="text-xs text-neutral-500">{{ movimiento.resumenMovimiento }}</div>
+                </td>
+
+                <!-- Motivo -->
+                <td class="px-6 py-4">
+                  <div class="text-sm text-neutral-900 max-w-xs truncate" [title]="movimiento.motivo">
+                    {{ movimiento.motivo }}
+                  </div>
+                  <div class="text-xs text-neutral-500">{{ movimiento.categoriaMotivo }}</div>
+                </td>
+
+                <!-- Usuario -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <div class="flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
+                      {{ movimiento.usuario.iniciales }}
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <button
+                        class="text-sm font-medium text-neutral-900 hover:text-blue-600 transition-colors cursor-pointer text-left"
+                        (click)="verMovimientosUsuario(movimiento.usuario.id)"
+                        title="Ver movimientos de este usuario"
+                      >
+                        {{ movimiento.usuario.nombreCompleto }}
+                      </button>
+                      <div class="text-xs text-neutral-500">{{ movimiento.usuario.nombreRol }}</div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Valor -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="text-sm font-semibold text-neutral-900">{{ formatearPrecio(movimiento.valorMovimiento) }}</div>
+                  <div class="text-xs text-neutral-500">{{ formatearPrecio(movimiento.producto.precio) }} c/u</div>
+                </td>
+
+                <!-- Impacto -->
+                <td class="px-6 py-4 whitespace-nowrap">
+                  <div class="flex flex-col gap-1">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium" [ngClass]="getNivelImpactoClass(movimiento.nivelImpacto)">
+                      {{ movimiento.nivelImpacto }}
+                    </span>
+                    @if (movimiento.esMovimientoMasivo) {
+                      <span class="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                        Masivo
+                      </span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Acciones -->
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <div class="flex items-center justify-end gap-2">
+                    @if (puedeVerDetalle()) {
+                      <button
+                        class="p-2 text-neutral-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                        (click)="verDetalle(movimiento.id)"
+                        title="Ver detalles"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                      </button>
+                    }
+                  </div>
+                </td>
+
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Estado vacío -->
+@if (movimientosFiltrados.length === 0 && !loadingStates().listing) {
+  <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-12 text-center max-w-7xl mx-auto">
+    <div class="flex flex-col items-center gap-4">
+      <div class="w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center">
+        <svg class="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+        </svg>
+      </div>
+      <div class="text-lg font-medium text-neutral-900">
+        @if (searchTerm() || selectedTipo() || selectedProducto() || selectedUsuario()) {
+          No se encontraron movimientos
+        } @else {
+          No hay movimientos registrados
+        }
+      </div>
+      <div class="text-neutral-600 max-w-md">
+        @if (searchTerm() || selectedTipo() || selectedProducto() || selectedUsuario()) {
+          Intenta ajustar los filtros de búsqueda para encontrar los movimientos que buscas.
+        } @else {
+          Los movimientos de inventario aparecerán aquí cuando comiences a registrar entradas y salidas de productos.
+        }
+      </div>
+      <div class="flex gap-3 mt-4">
+        @if (searchTerm() || selectedTipo() || selectedProducto() || selectedUsuario()) {
+          <button
+            class="px-4 py-2 text-sm font-medium text-neutral-600 hover:text-neutral-900 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-all duration-200"
+            (click)="limpiarFiltros()"
+          >
+            Limpiar filtros
+          </button>
+        }
+        @if (puedeCrear()) {
+          <button
+            class="px-4 py-2 text-sm font-medium bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-all duration-200"
+            (click)="crearMovimiento()"
+          >
+            Crear primer movimiento
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

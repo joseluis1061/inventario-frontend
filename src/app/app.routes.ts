@@ -98,6 +98,19 @@ export const routes: Routes = [
     ]
   },
 
+  // Moviemientos con MainLayout
+  {
+    path: 'movimientos',
+    loadComponent: () => import('./layouts/main-layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivate: [authGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./features/movimientos/movimientos.routes').then(m => m.MOVIMIENTOS_ROUTES)
+      }
+    ]
+  },
+
   // Redirect login
   {
     path: 'login',
