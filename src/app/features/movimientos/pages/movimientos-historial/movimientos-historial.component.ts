@@ -17,6 +17,16 @@ import {
 import { ProductoResponse } from '../../../../core/models/producto.interface';
 import { UsuarioResponse } from '../../../../core/models/usuario.interface';
 
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+// Declarar el tipo extendido para autoTable
+declare module 'jspdf' {
+  interface jsPDF {
+    autoTable: (options: any) => jsPDF;
+  }
+}
+
 @Component({
   selector: 'app-movimientos-historial',
   standalone: true,
@@ -447,18 +457,312 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
    * Exportar a Excel
    */
   private exportarExcel(movimientos: MovimientoResponse[]): void {
-    // Implementar exportación a Excel usando una librería como xlsx
-    console.log('Exportando a Excel:', movimientos);
-    // TODO: Implementar con librería xlsx
+    import('xlsx').then((XLSX) => {
+      // Preparar datos para Excel
+      const data = movimientos.map(mov => ({
+        'ID': mov.id,
+        'Fecha': this.formatearFecha(mov.fecha),
+        'Tipo': mov.tipoMovimiento,
+        'Producto': mov.producto.nombre,
+        'Categoría': mov.producto.nombreCategoria,
+        'Cantidad': mov.cantidad,
+        'Precio Unitario': mov.producto.precio,
+        'Valor Total': mov.valorMovimiento,
+        'Motivo': mov.motivo,
+        'Usuario': mov.usuario.nombreCompleto,
+        'Rol Usuario': mov.usuario.nombreRol,
+        'Nivel Impacto': mov.nivelImpacto,
+        'Es Masivo': mov.esMovimientoMasivo ? 'Sí' : 'No',
+        'Categoría Motivo': mov.categoriaMotivo
+      }));
+
+      // Crear workbook
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+
+      // Configurar estilos de columnas
+      const wscols = [
+        { wch: 8 },   // ID
+        { wch: 18 },  // Fecha
+        { wch: 10 },  // Tipo
+        { wch: 25 },  // Producto
+        { wch: 15 },  // Categoría
+        { wch: 10 },  // Cantidad
+        { wch: 15 },  // Precio Unitario
+        { wch: 15 },  // Valor Total
+        { wch: 30 },  // Motivo
+        { wch: 20 },  // Usuario
+        { wch: 12 },  // Rol Usuario
+        { wch: 12 },  // Nivel Impacto
+        { wch: 10 },  // Es Masivo
+        { wch: 15 }   // Categoría Motivo
+      ];
+      ws['!cols'] = wscols;
+
+      // Agregar hoja al workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Movimientos');
+
+      // Generar y descargar archivo
+      const fileName = `movimientos_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    }).catch(error => {
+      console.error('Error al exportar Excel:', error);
+    });
   }
 
   /**
    * Exportar a PDF
    */
+/**
+ * Exportar a PDF - Solución definitiva
+ */
   private exportarPDF(movimientos: MovimientoResponse[]): void {
-    // Implementar exportación a PDF usando una librería como jsPDF
-    console.log('Exportando a PDF:', movimientos);
-    // TODO: Implementar con librería jsPDF
+    // Usar importación dinámica con manejo específico para las versiones actuales
+    Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]).then(([jsPDFModule, autoTableModule]) => {
+
+      // Obtener el constructor de jsPDF correctamente
+      const jsPDF = (jsPDFModule as any).default || jsPDFModule.jsPDF || jsPDFModule;
+
+      // Verificar que tenemos el constructor
+      if (!jsPDF) {
+        console.error('No se pudo importar jsPDF');
+        this.exportarPDFBasico(movimientos);
+        return;
+      }
+
+      // Crear instancia del documento
+      const doc = new jsPDF('l', 'mm', 'a4');
+
+      // Aplicar el plugin autoTable
+      // En las versiones más recientes, el plugin se aplica automáticamente
+      // pero podemos forzar su aplicación si es necesario
+      if (autoTableModule.default && typeof autoTableModule.default === 'function') {
+        try {
+          autoTableModule.default(jsPDF, {});
+        } catch (error) {
+          console.warn('Error aplicando autoTable plugin:', error);
+        }
+      }
+
+      // Verificar si autoTable está disponible en la instancia
+      if (typeof (doc as any).autoTable !== 'function') {
+        console.warn('autoTable no está disponible, usando PDF básico');
+        this.exportarPDFBasico(movimientos);
+        return;
+      }
+
+      // Configurar título
+      doc.setFontSize(18);
+      doc.text('Historial de Movimientos', 14, 22);
+
+      // Información de filtros
+      doc.setFontSize(10);
+      const filtrosActivos = this.getFiltrosActivos();
+      if (filtrosActivos > 0) {
+        doc.text(`Filtros aplicados: ${filtrosActivos}`, 14, 30);
+      }
+      doc.text(`Generado: ${new Date().toLocaleDateString('es-CO')}`, 14, 36);
+
+      // Preparar datos para la tabla
+      const columns = [
+        'ID',
+        'Fecha',
+        'Tipo',
+        'Producto',
+        'Cantidad',
+        'Valor',
+        'Usuario',
+        'Impacto'
+      ];
+
+      const rows = movimientos.map(mov => [
+        mov.id.toString(),
+        this.formatearFecha(mov.fecha),
+        mov.tipoMovimiento,
+        mov.producto.nombre.length > 20 ? mov.producto.nombre.substring(0, 17) + '...' : mov.producto.nombre,
+        mov.cantidad.toString(),
+        this.formatearPrecio(mov.valorMovimiento),
+        mov.usuario.nombreCompleto.length > 15 ? mov.usuario.nombreCompleto.substring(0, 12) + '...' : mov.usuario.nombreCompleto,
+        mov.nivelImpacto
+      ]);
+
+      // Generar tabla con autoTable
+      try {
+        (doc as any).autoTable({
+          head: [columns],
+          body: rows,
+          startY: 45,
+          styles: {
+            fontSize: 8,
+            cellPadding: 2
+          },
+          headStyles: {
+            fillColor: [59, 130, 246], // Blue
+            textColor: 255
+          },
+          alternateRowStyles: {
+            fillColor: [249, 250, 251] // Light gray
+          },
+          columnStyles: {
+            0: { cellWidth: 15 }, // ID
+            1: { cellWidth: 35 }, // Fecha
+            2: { cellWidth: 20 }, // Tipo
+            3: { cellWidth: 50 }, // Producto
+            4: { cellWidth: 20 }, // Cantidad
+            5: { cellWidth: 30 }, // Valor
+            6: { cellWidth: 40 }, // Usuario
+            7: { cellWidth: 20 }  // Impacto
+          }
+        });
+
+        // Agregar número de página
+        const totalPages = (doc as any).internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+          doc.setPage(i);
+          doc.setFontSize(8);
+          doc.text(`Página ${i} de ${totalPages}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
+        }
+
+        // Descargar archivo
+        const fileName = `movimientos_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+
+      } catch (error) {
+        console.error('Error generando tabla con autoTable:', error);
+        this.exportarPDFBasico(movimientos);
+      }
+
+    }).catch(error => {
+      console.error('Error al importar librerías PDF:', error);
+      this.exportarPDFBasico(movimientos);
+    });
+  }
+
+  /**
+   * Método de respaldo mejorado para exportar PDF sin autoTable
+   */
+  private exportarPDFBasico(movimientos: MovimientoResponse[]): void {
+    import('jspdf').then(jsPDFModule => {
+
+      // Obtener el constructor correctamente
+      const jsPDF = (jsPDFModule as any).default || jsPDFModule.jsPDF || jsPDFModule;
+
+      if (!jsPDF) {
+        console.error('No se pudo importar jsPDF para PDF básico');
+        return;
+      }
+
+      const doc = new jsPDF('l', 'mm', 'a4');
+
+      // Título
+      doc.setFontSize(18);
+      doc.text('Historial de Movimientos', 14, 22);
+
+      // Información
+      doc.setFontSize(10);
+      const filtrosActivos = this.getFiltrosActivos();
+      if (filtrosActivos > 0) {
+        doc.text(`Filtros aplicados: ${filtrosActivos}`, 14, 30);
+      }
+      doc.text(`Generado: ${new Date().toLocaleDateString('es-CO')}`, 14, 36);
+
+      // Crear tabla simple
+      let yPosition = 50;
+      doc.setFontSize(8);
+
+      // Encabezados
+      doc.setFont(undefined, 'bold');
+      const headers = ['ID', 'Fecha', 'Tipo', 'Producto', 'Cant.', 'Valor', 'Usuario'];
+      const columnWidths = [20, 40, 25, 60, 25, 35, 45]; // Anchos de columnas
+      let xPosition = 15;
+
+      headers.forEach((header, i) => {
+        doc.text(header, xPosition, yPosition);
+        xPosition += columnWidths[i];
+      });
+
+      yPosition += 8;
+      doc.setFont(undefined, 'normal');
+
+      // Datos
+      movimientos.forEach((mov, index) => {
+        if (yPosition > 190) {
+          doc.addPage();
+          yPosition = 20;
+
+          // Repetir encabezados en nueva página
+          doc.setFont(undefined, 'bold');
+          xPosition = 15;
+          headers.forEach((header, i) => {
+            doc.text(header, xPosition, yPosition);
+            xPosition += columnWidths[i];
+          });
+          yPosition += 8;
+          doc.setFont(undefined, 'normal');
+        }
+
+        const row = [
+          mov.id.toString(),
+          this.formatearFecha(mov.fecha).substring(0, 10),
+          mov.tipoMovimiento.substring(0, 3),
+          mov.producto.nombre.substring(0, 15),
+          mov.cantidad.toString(),
+          this.formatearPrecio(mov.valorMovimiento).substring(0, 12),
+          mov.usuario.nombreCompleto.substring(0, 12)
+        ];
+
+        xPosition = 15;
+        row.forEach((cell, i) => {
+          // Truncar texto si es muy largo
+          const text = cell.length > 15 ? cell.substring(0, 12) + '...' : cell;
+          doc.text(text, xPosition, yPosition);
+          xPosition += columnWidths[i];
+        });
+
+        yPosition += 6;
+      });
+
+      // Número de página
+      const totalPages = (doc as any).internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.text(`Página ${i} de ${totalPages}`, doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 10);
+      }
+
+      const fileName = `movimientos_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+    }).catch(error => {
+      console.error('Error al exportar PDF básico:', error);
+    });
+  }
+
+  /**
+   * Alternativa: Exportar PDF usando importación estática
+   * Si el problema persiste, puedes usar esta alternativa
+   */
+  private exportarPDFEstatico(movimientos: MovimientoResponse[]): void {
+    // Para usar esto, necesitas importar al inicio del archivo:
+    // import jsPDF from 'jspdf';
+    // import 'jspdf-autotable';
+
+    /*
+    const doc = new jsPDF('l', 'mm', 'a4');
+
+    // Configurar título
+    doc.setFontSize(18);
+    doc.text('Historial de Movimientos', 14, 22);
+
+    // El resto del código es igual al método exportarPDF
+    // pero sin las importaciones dinámicas
+    */
+
+    console.warn('Método de importación estática no implementado');
+    this.exportarPDFBasico(movimientos);
   }
 
   /**
@@ -470,11 +774,16 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
       'Fecha',
       'Tipo',
       'Producto',
+      'Categoría',
       'Cantidad',
+      'Precio Unitario',
+      'Valor Total',
       'Motivo',
       'Usuario',
-      'Valor',
-      'Impacto'
+      'Rol Usuario',
+      'Nivel Impacto',
+      'Es Masivo',
+      'Categoría Motivo'
     ];
 
     const data = movimientos.map(mov => [
@@ -482,14 +791,21 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
       this.formatearFecha(mov.fecha),
       mov.tipoMovimiento,
       mov.producto.nombre,
+      mov.producto.nombreCategoria,
       mov.cantidad,
-      mov.motivo,
-      mov.usuario.nombreCompleto,
+      mov.producto.precio,
       mov.valorMovimiento,
-      mov.nivelImpacto
+      mov.motivo.replace(/"/g, '""'), // Escapar comillas dobles
+      mov.usuario.nombreCompleto,
+      mov.usuario.nombreRol,
+      mov.nivelImpacto,
+      mov.esMovimientoMasivo ? 'Sí' : 'No',
+      mov.categoriaMotivo
     ]);
 
-    const csvContent = [headers, ...data]
+    // Crear BOM para UTF-8 (para que Excel abra correctamente los caracteres especiales)
+    const BOM = '\uFEFF';
+    const csvContent = BOM + [headers, ...data]
       .map(row => row.map(field => `"${field}"`).join(','))
       .join('\n');
 
@@ -504,6 +820,7 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   /**
