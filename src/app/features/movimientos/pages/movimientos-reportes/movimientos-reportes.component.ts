@@ -718,7 +718,7 @@ export class MovimientosReportesComponent implements OnInit, OnDestroy {
     // Filtrar por categorías seleccionadas
     if (filtros.categoriaIds?.length > 0) {
       resultado = resultado.filter(mov => {
-        const categoriaId = this.productos().find(p => p.id === mov.producto.id)?.categoriaId;
+        const categoriaId = this.productos().find(p => p.id === mov.producto.id)?.categoria.id;
         return filtros.categoriaIds.includes(categoriaId);
       });
     }
@@ -1203,21 +1203,21 @@ export class MovimientosReportesComponent implements OnInit, OnDestroy {
    */
   navegarAResumenStock(): void {
     console.log('🔄 Navegando a resumen de stock...');
-    this.router.navigate(['/dashboard/movimientos/resumen-stock']);
+    this.router.navigate(['/movimientos/resumen-stock']);
   }
 
   /**
    * Navegar a estadísticas
    */
   navegarAEstadisticas(): void {
-    this.router.navigate(['/dashboard/movimientos/estadisticas']);
+    this.router.navigate(['/movimientos/estadisticas']);
   }
 
   /**
    * Navegar a historial
    */
   navegarAHistorial(): void {
-    this.router.navigate(['/dashboard/movimientos/historial']);
+    this.router.navigate(['/movimientos/historial']);
   }
 
   // ===== EXPORTACIÓN =====
@@ -1586,8 +1586,8 @@ export class MovimientosReportesComponent implements OnInit, OnDestroy {
       }
 
       // Hoja 4: Análisis por categorías
-      const movimientos = this.movimientos();
-      if (movimientos.length > 0) {
+      const movimientosParaCategorias = this.movimientos();
+      if (movimientosParaCategorias.length > 0) {
         const categoriaAnalisis = new Map<string, {
           movimientos: number,
           entradas: number,
@@ -1597,7 +1597,7 @@ export class MovimientosReportesComponent implements OnInit, OnDestroy {
           valorTotal: number
         }>();
 
-        movimientos.forEach(mov => {
+        movimientosParaCategorias.forEach(mov => {
           const categoria = mov.producto.nombreCategoria;
           if (!categoriaAnalisis.has(categoria)) {
             categoriaAnalisis.set(categoria, {
@@ -1899,5 +1899,28 @@ export class MovimientosReportesComponent implements OnInit, OnDestroy {
 
   get datosParaGraficas() {
     return this.reporteGenerado() && this.movimientos().length > 0;
+  }
+
+  // ===== MÉTODOS PARA FILTROS EN TEMPLATE =====
+
+  /**
+   * Obtener productos por criticidad alta
+   */
+  getProductosCriticidadAlta(): number {
+    return this.resumenProductos().filter(p => p.criticidad === 'ALTA').length;
+  }
+
+  /**
+   * Obtener productos por criticidad media
+   */
+  getProductosCriticidadMedia(): number {
+    return this.resumenProductos().filter(p => p.criticidad === 'MEDIA').length;
+  }
+
+  /**
+   * Obtener productos por criticidad baja
+   */
+  getProductosCriticidadBaja(): number {
+    return this.resumenProductos().filter(p => p.criticidad === 'BAJA').length;
   }
 }

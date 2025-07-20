@@ -1,1 +1,885 @@
-<p>movimientos-reportes works!</p>
+<!-- ===== HEADER DEL COMPONENTE ===== -->
+<div class="min-h-screen bg-gray-50 py-6">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+    <!-- Header con título y navegación -->
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+        <div class="flex-1">
+          <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+            📊 Reportes de Movimientos
+            <span class="ml-3 text-lg font-normal text-gray-500">
+              {{ estadoReporte }}
+            </span>
+          </h1>
+          <p class="mt-2 text-gray-600">
+            Generación de reportes completos con análisis avanzado y exportación a PDF/Excel
+          </p>
+        </div>
+
+        <!-- Botones de navegación -->
+        <div class="mt-4 lg:mt-0 flex flex-wrap gap-3">
+          <button
+            (click)="navegarAEstadisticas()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            📈 Estadísticas
+          </button>
+
+          <button
+            (click)="navegarAResumenStock()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            📦 Resumen Stock
+          </button>
+
+          <button
+            (click)="navegarAHistorial()"
+            class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            📋 Historial
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== INDICADORES DE ESTADO ===== -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-red-800">Error al cargar datos</h3>
+            <p class="mt-1 text-sm text-red-700">{{ error() }}</p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Loading inicial -->
+    @if (isLoadingData()) {
+      <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-6">
+        <div class="flex flex-col items-center justify-center">
+          <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p class="text-gray-600">Cargando datos del sistema...</p>
+        </div>
+      </div>
+    }
+
+    <!-- Contenido principal -->
+    @if (!isLoadingData() && !error()) {
+      <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+
+        <!-- ===== PANEL DE FILTROS (Columna izquierda) ===== -->
+        <div class="xl:col-span-1 space-y-6">
+
+          <!-- Filtros de fechas y básicos -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              🔍 Filtros de Reporte
+              @if (filtrosAplicados > 0) {
+                <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {{ filtrosAplicados }} activo{{ filtrosAplicados !== 1 ? 's' : '' }}
+                </span>
+              }
+            </h3>
+
+            <form [formGroup]="filtrosForm" class="space-y-4">
+              <!-- Rango de fechas -->
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio</label>
+                  <input
+                    type="date"
+                    formControlName="fechaInicio"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin</label>
+                  <input
+                    type="date"
+                    formControlName="fechaFin"
+                    class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  >
+                </div>
+              </div>
+
+              <!-- Tipo de movimiento -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Movimiento</label>
+                <select
+                  formControlName="tipoMovimiento"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  <option value="TODOS">Todos los tipos</option>
+                  <option value="ENTRADA">Solo Entradas</option>
+                  <option value="SALIDA">Solo Salidas</option>
+                </select>
+              </div>
+
+              <!-- Productos (Multi-select simplificado) -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Productos Específicos</label>
+                <select
+                  formControlName="productoIds"
+                  multiple
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  size="4"
+                >
+                  @for (producto of productos(); track producto.id) {
+                    <option [value]="producto.id">{{ producto.nombre }}</option>
+                  }
+                </select>
+                <p class="mt-1 text-xs text-gray-500">Mantén Ctrl para seleccionar múltiples</p>
+              </div>
+
+              <!-- Usuarios -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Usuarios Específicos</label>
+                <select
+                  formControlName="usuarioIds"
+                  multiple
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  size="4"
+                >
+                  @for (usuario of usuarios(); track usuario.id) {
+                    <option [value]="usuario.id">{{ usuario.nombreCompleto }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Categorías -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Categorías</label>
+                <select
+                  formControlName="categoriaIds"
+                  multiple
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  size="3"
+                >
+                  @for (categoria of categorias(); track categoria.id) {
+                    <option [value]="categoria.id">{{ categoria.nombre }}</option>
+                  }
+                </select>
+              </div>
+
+              <!-- Filtros adicionales -->
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <input
+                    id="incluirMasivos"
+                    type="checkbox"
+                    formControlName="incluirMasivos"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  >
+                  <label for="incluirMasivos" class="ml-2 block text-sm text-gray-700">
+                    Incluir movimientos masivos
+                  </label>
+                </div>
+
+                <div class="flex items-center">
+                  <input
+                    id="soloStockCritico"
+                    type="checkbox"
+                    formControlName="soloStockCritico"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  >
+                  <label for="soloStockCritico" class="ml-2 block text-sm text-gray-700">
+                    Solo productos con stock crítico
+                  </label>
+                </div>
+              </div>
+
+              <!-- Motivo específico -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Motivo Específico</label>
+                <input
+                  type="text"
+                  formControlName="motivoFiltro"
+                  placeholder="Buscar por motivo..."
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+              </div>
+
+              <!-- Botones de filtros -->
+              <div class="grid grid-cols-2 gap-3 pt-4">
+                <button
+                  type="button"
+                  (click)="limpiarFiltros()"
+                  class="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                >
+                  Limpiar
+                </button>
+                <button
+                  type="button"
+                  (click)="generarReporte()"
+                  [disabled]="!puedeGenerar"
+                  class="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  @if (isGeneratingReport()) {
+                    <span class="flex items-center justify-center">
+                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Generando...
+                    </span>
+                  } @else {
+                    Generar Reporte
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Configuración de reporte -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">⚙️ Configuración</h3>
+
+            <form [formGroup]="configReporteForm" class="space-y-4">
+              <!-- Tipo de reporte -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Reporte</label>
+                <select
+                  formControlName="tipoReporte"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  <option value="EJECUTIVO">Ejecutivo (Resumen)</option>
+                  <option value="DETALLADO">Detallado (Completo)</option>
+                  <option value="OPERATIVO">Operativo (Datos)</option>
+                </select>
+              </div>
+
+              <!-- Configuraciones predefinidas -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Configuraciones Rápidas</label>
+                <div class="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    (click)="aplicarConfiguracionPredefinida('ejecutivo')"
+                    class="px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Ejecutivo
+                  </button>
+                  <button
+                    type="button"
+                    (click)="aplicarConfiguracionPredefinida('operativo')"
+                    class="px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Operativo
+                  </button>
+                  <button
+                    type="button"
+                    (click)="aplicarConfiguracionPredefinida('completo')"
+                    class="px-3 py-2 text-xs font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Completo
+                  </button>
+                </div>
+              </div>
+
+              <!-- Inclusions -->
+              <div class="space-y-3">
+                <div class="flex items-center">
+                  <input
+                    id="incluirGraficas"
+                    type="checkbox"
+                    formControlName="incluirGraficas"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  >
+                  <label for="incluirGraficas" class="ml-2 block text-sm text-gray-700">
+                    Incluir gráficas
+                  </label>
+                </div>
+
+                <div class="flex items-center">
+                  <input
+                    id="incluirTablas"
+                    type="checkbox"
+                    formControlName="incluirTablas"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  >
+                  <label for="incluirTablas" class="ml-2 block text-sm text-gray-700">
+                    Incluir tablas detalladas
+                  </label>
+                </div>
+
+                <div class="flex items-center">
+                  <input
+                    id="incluirEstadisticas"
+                    type="checkbox"
+                    formControlName="incluirEstadisticas"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  >
+                  <label for="incluirEstadisticas" class="ml-2 block text-sm text-gray-700">
+                    Incluir estadísticas
+                  </label>
+                </div>
+
+                <div class="flex items-center">
+                  <input
+                    id="incluirResumen"
+                    type="checkbox"
+                    formControlName="incluirResumen"
+                    class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  >
+                  <label for="incluirResumen" class="ml-2 block text-sm text-gray-700">
+                    Incluir resumen ejecutivo
+                  </label>
+                </div>
+              </div>
+
+              <!-- Formato de exportación -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Formato de Exportación</label>
+                <select
+                  formControlName="formatoExportacion"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  <option value="PDF">Solo PDF</option>
+                  <option value="EXCEL">Solo Excel</option>
+                  <option value="AMBOS">PDF + Excel</option>
+                </select>
+              </div>
+
+              <!-- Nombre del reporte -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Archivo</label>
+                <input
+                  type="text"
+                  formControlName="nombreReporte"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+              </div>
+
+              <!-- Descripción -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Descripción (Opcional)</label>
+                <textarea
+                  formControlName="descripcionReporte"
+                  rows="2"
+                  class="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Describe el propósito del reporte..."
+                ></textarea>
+              </div>
+
+              <!-- Botón de exportar -->
+              <button
+                type="button"
+                (click)="exportarReporte()"
+                [disabled]="!puedeExportar"
+                class="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                @if (isExporting()) {
+                  <span class="flex items-center justify-center">
+                    <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Exportando...
+                  </span>
+                } @else {
+                  📥 Exportar Reporte
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- ===== PANEL PRINCIPAL DE RESULTADOS (Columnas derecha) ===== -->
+        <div class="xl:col-span-2 space-y-6">
+
+          @if (!reporteGenerado()) {
+            <!-- Estado inicial sin reporte -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+              <div class="text-center">
+                <div class="text-6xl mb-4">📊</div>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">Listo para generar reporte</h3>
+                <p class="text-gray-600 mb-6">
+                  Configura los filtros y haz clic en "Generar Reporte" para comenzar el análisis
+                </p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-500">
+                  <div class="flex items-center justify-center">
+                    <span class="text-2xl mr-2">📈</span>
+                    <span>6 tipos de gráficas</span>
+                  </div>
+                  <div class="flex items-center justify-center">
+                    <span class="text-2xl mr-2">📋</span>
+                    <span>Análisis detallado</span>
+                  </div>
+                  <div class="flex items-center justify-center">
+                    <span class="text-2xl mr-2">📤</span>
+                    <span>Exportación PDF/Excel</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <!-- Reporte generado - Métricas principales -->
+            @if (metricas(); as metricas) {
+              <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                  📈 Métricas Principales
+                  <span class="ml-2 text-sm font-normal text-gray-500">
+                    {{ getTendenciaIcon(metricas.tendenciaMensual) }} {{ metricas.tendenciaMensual }}
+                  </span>
+                </h3>
+
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div class="bg-blue-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-blue-600">{{ formatearNumero(metricas.totalMovimientos) }}</div>
+                    <div class="text-sm text-blue-700">Total Movimientos</div>
+                  </div>
+
+                  <div class="bg-green-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-green-600">{{ formatearNumero(metricas.unidadesEntradas) }}</div>
+                    <div class="text-sm text-green-700">Unidades Entrada</div>
+                  </div>
+
+                  <div class="bg-red-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-red-600">{{ formatearNumero(metricas.unidadesSalidas) }}</div>
+                    <div class="text-sm text-red-700">Unidades Salida</div>
+                  </div>
+
+                  <div class="bg-purple-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-purple-600">{{ formatearPrecio(metricas.valorTotalMovido) }}</div>
+                    <div class="text-sm text-purple-700">Valor Total</div>
+                  </div>
+
+                  <div class="bg-yellow-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-yellow-600">{{ formatearNumero(metricas.productosAfectados) }}</div>
+                    <div class="text-sm text-yellow-700">Productos</div>
+                  </div>
+
+                  <div class="bg-indigo-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-indigo-600">{{ formatearNumero(metricas.usuariosActivos) }}</div>
+                    <div class="text-sm text-indigo-700">Usuarios</div>
+                  </div>
+
+                  <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-gray-600">{{ metricas.promedioMovimientosPorDia.toFixed(1) }}</div>
+                    <div class="text-sm text-gray-700">Promedio/día</div>
+                  </div>
+
+                  <div class="bg-teal-50 rounded-lg p-4">
+                    <div class="text-2xl font-bold text-teal-600">{{ formatearNumero(metricas.diferenciaUnidades) }}</div>
+                    <div class="text-sm text-teal-700">Diferencia Neta</div>
+                  </div>
+                </div>
+
+                <!-- Categorías más activas -->
+                @if (metricas.categoriasMasActivas.length > 0) {
+                  <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-3">Categorías Más Activas</h4>
+                    <div class="flex flex-wrap gap-2">
+                      @for (categoria of metricas.categoriasMasActivas; track categoria) {
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                          {{ categoria }}
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- Gráficas -->
+            @if (datosParaGraficas) {
+              <!-- Primera fila de gráficas -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Gráfica resumen general -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div class="h-80">
+                    <canvas
+                      #chartResumenGeneral
+                      baseChart
+                      [data]="chartResumenGeneralData"
+                      [options]="chartResumenGeneralOptions"
+                      type="doughnut"
+                      class="w-full h-full"
+                    ></canvas>
+                  </div>
+                </div>
+
+                <!-- Gráfica tendencia temporal -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div class="h-80">
+                    <canvas
+                      #chartTendenciaTemporal
+                      baseChart
+                      [data]="chartTendenciaTemporalData"
+                      [options]="chartTendenciaTemporalOptions"
+                      type="line"
+                      class="w-full h-full"
+                    ></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Segunda fila de gráficas -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Gráfica distribución categorías -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div class="h-80">
+                    <canvas
+                      #chartDistribucionCategorias
+                      baseChart
+                      [data]="chartDistribucionCategoriasData"
+                      [options]="chartDistribucionCategoriasOptions"
+                      type="bar"
+                      class="w-full h-full"
+                    ></canvas>
+                  </div>
+                </div>
+
+                <!-- Gráfica top productos -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div class="h-80">
+                    <canvas
+                      #chartTopProductos
+                      baseChart
+                      [data]="chartTopProductosData"
+                      [options]="chartTopProductosOptions"
+                      type="bar"
+                      class="w-full h-full"
+                    ></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tercera fila de gráficas -->
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Gráfica rendimiento usuarios -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div class="h-80">
+                    <canvas
+                      #chartRendimientoUsuarios
+                      baseChart
+                      [data]="chartRendimientoUsuariosData"
+                      [options]="chartRendimientoUsuariosOptions"
+                      type="radar"
+                      class="w-full h-full"
+                    ></canvas>
+                  </div>
+                </div>
+
+                <!-- Gráfica comparativo mensual -->
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div class="h-80">
+                    <canvas
+                      #chartComparativoMensual
+                      baseChart
+                      [data]="chartComparativoMensualData"
+                      [options]="chartComparativoMensualOptions"
+                      type="bar"
+                      class="w-full h-full"
+                    ></canvas>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Resumen de productos críticos -->
+              @if (resumenProductos().length > 0) {
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-4">📦 Resumen de Productos</h3>
+
+                  <!-- Filtros rápidos -->
+                  <div class="flex flex-wrap gap-2 mb-4">
+                    <button
+                      type="button"
+                      class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800 hover:bg-red-200 transition-colors"
+                    >
+                      Criticidad Alta: {{ getProductosCriticidadAlta() }}
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors"
+                    >
+                      Criticidad Media: {{ getProductosCriticidadMedia() }}
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 hover:bg-green-200 transition-colors"
+                    >
+                      Criticidad Baja: {{ getProductosCriticidadBaja() }}
+                    </button>
+                  </div>
+
+                  <!-- Tabla de productos -->
+                  <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                      <thead class="bg-gray-50">
+                        <tr>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Producto
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Stock
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Movimientos
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Valor Inventario
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Rotación
+                          </th>
+                          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Criticidad
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody class="bg-white divide-y divide-gray-200">
+                        @for (producto of resumenProductos().slice(0, 15); track producto.productoId) {
+                          <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                              <div class="text-sm font-medium text-gray-900">
+                                {{ producto.nombreProducto.length > 30 ? (producto.nombreProducto | slice:0:30) + '...' : producto.nombreProducto }}
+                              </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                              <div class="text-sm text-gray-900">
+                                {{ producto.stockActual }} / {{ producto.stockMinimo }}
+                              </div>
+                              <span [class]="getEstadoStockClass(producto.estadoStock)">
+                                {{ producto.estadoStock }}
+                              </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <div class="flex space-x-2">
+                                <span class="text-green-600">↗ {{ producto.totalEntradas }}</span>
+                                <span class="text-red-600">↘ {{ producto.totalSalidas }}</span>
+                              </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {{ formatearPrecio(producto.valorInventario) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {{ producto.rotacionStock }}x
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                              <span [class]="getCriticidadClass(producto.criticidad)">
+                                {{ producto.criticidad }}
+                              </span>
+                              @if (producto.diasSinMovimiento > 30) {
+                                <div class="text-xs text-gray-500">
+                                  {{ producto.diasSinMovimiento }} días sin mov.
+                                </div>
+                              }
+                            </td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+
+                    @if (resumenProductos().length > 15) {
+                      <div class="px-6 py-3 bg-gray-50 text-center text-sm text-gray-500">
+                        Mostrando 15 de {{ resumenProductos().length }} productos.
+                        <span class="text-blue-600 cursor-pointer hover:underline">Ver reporte completo para más detalles.</span>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
+              <!-- Estadísticas detalladas -->
+              @if (estadisticasGenerales(); as stats) {
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-4">📊 Estadísticas Detalladas</h3>
+
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Resumen de entradas -->
+                    <div class="bg-green-50 rounded-lg p-4">
+                      <h4 class="text-sm font-semibold text-green-800 mb-3">📈 Entradas</h4>
+                      <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                          <span class="text-green-700">Cantidad de movimientos:</span>
+                          <span class="font-medium text-green-900">{{ formatearNumero(stats.cantidadEntradas) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-green-700">Total unidades:</span>
+                          <span class="font-medium text-green-900">{{ formatearNumero(stats.unidadesEntradas) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-green-700">Porcentaje del total:</span>
+                          <span class="font-medium text-green-900">{{ formatearPorcentaje(stats.porcentajeEntradas) }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Resumen de salidas -->
+                    <div class="bg-red-50 rounded-lg p-4">
+                      <h4 class="text-sm font-semibold text-red-800 mb-3">📉 Salidas</h4>
+                      <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                          <span class="text-red-700">Cantidad de movimientos:</span>
+                          <span class="font-medium text-red-900">{{ formatearNumero(stats.cantidadSalidas) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-red-700">Total unidades:</span>
+                          <span class="font-medium text-red-900">{{ formatearNumero(stats.unidadesSalidas) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                          <span class="text-red-700">Porcentaje del total:</span>
+                          <span class="font-medium text-red-900">{{ formatearPorcentaje(stats.porcentajeSalidas) }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Resumen consolidado -->
+                  <div class="mt-6 pt-6 border-t border-gray-200">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      <div class="text-center">
+                        <div class="text-2xl font-bold text-gray-900">{{ formatearNumero(stats.totalMovimientos) }}</div>
+                        <div class="text-sm text-gray-600">Total Movimientos</div>
+                      </div>
+                      <div class="text-center">
+                        <div class="text-2xl font-bold {{ stats.diferenciaNeta >= 0 ? 'text-green-600' : 'text-red-600' }}">
+                          {{ stats.diferenciaNeta >= 0 ? '+' : '' }}{{ formatearNumero(stats.diferenciaNeta) }}
+                        </div>
+                        <div class="text-sm text-gray-600">Diferencia Neta (unidades)</div>
+                      </div>
+                      <div class="text-center">
+                        <div class="text-2xl font-bold text-blue-600">
+                          {{ formatearNumero(stats.unidadesEntradas + stats.unidadesSalidas) }}
+                        </div>
+                        <div class="text-sm text-gray-600">Total Unidades Movidas</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              }
+
+              <!-- Información de generación del reporte -->
+              <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-lg font-semibold text-gray-900">ℹ️ Información del Reporte</h3>
+                    @if (fechaUltimaGeneracion(); as fecha) {
+                      <p class="text-sm text-gray-600 mt-1">
+                        Generado el {{ fecha.toLocaleDateString('es-CO') }} a las {{ fecha.toLocaleTimeString('es-CO') }}
+                      </p>
+                    }
+                    @if (currentUser(); as usuario) {
+                      <p class="text-sm text-gray-600">
+                        Por: {{ usuario.nombreCompleto }} ({{ usuario.role }})
+                      </p>
+                    }
+                  </div>
+
+                  <div class="flex space-x-3">
+                    <button
+                      type="button"
+                      (click)="actualizarReporteAutomatico()"
+                      class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    >
+                      🔄 Actualizar
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="exportarReporte()"
+                      [disabled]="!puedeExportar"
+                      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      @if (isExporting()) {
+                        <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Exportando...
+                      } @else {
+                        📥 Exportar
+                      }
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Resumen de filtros aplicados -->
+                @if (filtrosAplicados > 0) {
+                  <div class="mt-4 pt-4 border-t border-gray-200">
+                    <h4 class="text-sm font-semibold text-gray-900 mb-2">Filtros Aplicados:</h4>
+                    <div class="flex flex-wrap gap-2">
+                      @if (filtrosForm.get('tipoMovimiento')?.value !== 'TODOS') {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          Tipo: {{ filtrosForm.get('tipoMovimiento')?.value }}
+                        </span>
+                      }
+
+                      @if (filtrosForm.get('productoIds')?.value?.length > 0) {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          {{ filtrosForm.get('productoIds')?.value?.length }} Producto(s)
+                        </span>
+                      }
+
+                      @if (filtrosForm.get('usuarioIds')?.value?.length > 0) {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {{ filtrosForm.get('usuarioIds')?.value?.length }} Usuario(s)
+                        </span>
+                      }
+
+                      @if (filtrosForm.get('categoriaIds')?.value?.length > 0) {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          {{ filtrosForm.get('categoriaIds')?.value?.length }} Categoría(s)
+                        </span>
+                      }
+
+                      @if (!filtrosForm.get('incluirMasivos')?.value) {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          Sin masivos
+                        </span>
+                      }
+
+                      @if (filtrosForm.get('soloStockCritico')?.value) {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          Solo stock crítico
+                        </span>
+                      }
+
+                      @if (filtrosForm.get('motivoFiltro')?.value?.trim()) {
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                          Motivo: "{{ filtrosForm.get('motivoFiltro')?.value }}"
+                        </span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            } @else {
+              <!-- Mensaje cuando no hay datos para gráficas -->
+              <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-12">
+                <div class="text-center">
+                  <div class="text-6xl mb-4">📭</div>
+                  <h3 class="text-lg font-medium text-gray-900 mb-2">No hay movimientos en el rango seleccionado</h3>
+                  <p class="text-gray-600 mb-6">
+                    Ajusta los filtros de fecha o criterios para incluir más datos en el reporte
+                  </p>
+                  <button
+                    type="button"
+                    (click)="limpiarFiltros()"
+                    class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    🔄 Limpiar Filtros
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- ===== MODAL DE AYUDA (Opcional) ===== -->
+<!-- Puedes agregar un modal de ayuda aquí si es necesario -->
+
+<!-- ===== TOAST NOTIFICATIONS ===== -->
+<!-- Las notificaciones se manejan a través del NotificationService -->
