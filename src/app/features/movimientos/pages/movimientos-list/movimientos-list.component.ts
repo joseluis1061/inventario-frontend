@@ -297,6 +297,13 @@ export class MovimientosListComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navegación a dashboard de recientes
+   */
+  verRecientes(): void {
+    this.router.navigate(['/movimientos/recientes']);
+  }
+
+  /**
    * Navegación a estadísticas
    */
   verEstadisticas(): void {

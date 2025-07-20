@@ -843,6 +843,13 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navegación a dashboard de recientes
+   */
+  verRecientes(): void {
+    this.router.navigate(['/movimientos/recientes']);
+  }
+
+  /**
    * Obtener información del producto por ID
    */
   getProductoPorId(id: number): ProductoResponse | undefined {
