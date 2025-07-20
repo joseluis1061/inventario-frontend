@@ -113,24 +113,30 @@ export class ResumenStockComponent implements OnInit, OnDestroy {
     let resumenes = [...this.resumenesProductos()];
     const filtros = this.filtrosForm?.value;
 
+    console.log('Aplicando filtros:', filtros);
+    console.log('Resúmenes antes de filtrar:', resumenes.length);
+
     if (!filtros) return resumenes;
 
     // Filtro por búsqueda
-    if (filtros.busqueda) {
-      const termino = filtros.busqueda.toLowerCase();
+    if (filtros.busqueda && filtros.busqueda.trim() !== '') {
+      const termino = filtros.busqueda.toLowerCase().trim();
       resumenes = resumenes.filter(p =>
         p.nombreProducto.toLowerCase().includes(termino)
       );
+      console.log(`Después de filtro búsqueda "${termino}":`, resumenes.length);
     }
 
     // Filtro por estado de stock
     if (filtros.estadoStock && filtros.estadoStock !== 'TODOS') {
       resumenes = resumenes.filter(p => p.estadoStock === filtros.estadoStock);
+      console.log(`Después de filtro estado "${filtros.estadoStock}":`, resumenes.length);
     }
 
     // Filtro por consistencia
-    if (filtros.soloInconsistentes) {
+    if (filtros.soloInconsistentes === true) {
       resumenes = resumenes.filter(p => !p.stockConsistente);
+      console.log('Después de filtro inconsistentes:', resumenes.length);
     }
 
     // Ordenamiento
@@ -151,6 +157,7 @@ export class ResumenStockComponent implements OnInit, OnDestroy {
       return 0;
     });
 
+    console.log('Resúmenes después de todos los filtros:', resumenes.length);
     return resumenes;
   });
 
@@ -282,25 +289,79 @@ export class ResumenStockComponent implements OnInit, OnDestroy {
   /**
    * Configurar suscripciones a cambios en formularios
    */
+
   private setupFormSubscriptions(): void {
     // Cambios en filtros
     this.filtrosForm.valueChanges
       .pipe(
         takeUntil(this.destroy$),
         debounceTime(300),
-        distinctUntilChanged()
+        distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))
       )
       .subscribe(filtros => {
         console.log('Filtros cambiados:', filtros);
 
         // Si se selecciona cargar todos, cargar todos los resúmenes
         if (filtros.cargarTodos && this.resumenesProductos().length < this.productos().length) {
+          console.log('Cargando todos los resúmenes...');
           this.loadTodosLosResumenes();
         }
 
-        // Actualizar gráficas
-        this.updateCharts();
+        // Actualizar gráficas con los datos filtrados
+        this.updateChartsWithFilteredData();
       });
+
+    // Suscripción específica para "cargar todos"
+    this.filtrosForm.get('cargarTodos')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(cargarTodos => {
+        if (cargarTodos && this.resumenesProductos().length < this.productos().length) {
+          this.loadTodosLosResumenes();
+        }
+      });
+  }
+
+  /**
+   * Actualizar gráficas con datos filtrados
+   */
+  private updateChartsWithFilteredData(): void {
+    const datosFiltrados = this.resumenesProductosFiltrados();
+
+    // Recalcular estadísticas con datos filtrados
+    const normalesFiltrados = datosFiltrados.filter(p => p.estadoStock === 'NORMAL').length;
+    const bajosFiltrados = datosFiltrados.filter(p => p.estadoStock === 'BAJO').length;
+    const criticosFiltrados = datosFiltrados.filter(p => p.estadoStock === 'CRITICO').length;
+
+    // Actualizar gráfica de estados con datos filtrados
+    this.chartEstadosStockData.datasets[0].data = [normalesFiltrados, bajosFiltrados, criticosFiltrados];
+
+    if (normalesFiltrados === 0 && bajosFiltrados === 0 && criticosFiltrados === 0) {
+      this.chartEstadosStockData.datasets[0].data = [1, 1, 1];
+      this.chartEstadosStockData.labels = ['Sin datos', 'Sin datos', 'Sin datos'];
+    } else {
+      this.chartEstadosStockData.labels = ['Normal', 'Bajo', 'Crítico'];
+    }
+
+    // Actualizar gráfica de distribución con datos filtrados
+    const topProductosFiltrados = datosFiltrados
+      .sort((a, b) => b.stockActual - a.stockActual)
+      .slice(0, 10);
+
+    if (topProductosFiltrados.length > 0) {
+      this.chartDistribucionStockData.labels = topProductosFiltrados.map(p =>
+        p.nombreProducto.length > 15 ? p.nombreProducto.substring(0, 15) + '...' : p.nombreProducto
+      );
+      this.chartDistribucionStockData.datasets[0].data = topProductosFiltrados.map(p => p.stockActual);
+    } else {
+      this.chartDistribucionStockData.labels = ['Sin datos'];
+      this.chartDistribucionStockData.datasets[0].data = [1];
+    }
+
+    // Forzar actualización
+    setTimeout(() => {
+      this.chartEstadosStock?.chart?.update('active');
+      this.chartDistribucionStock?.chart?.update('active');
+    }, 100);
   }
 
   // ===== MÉTODOS PARA CARGAR DATOS =====
@@ -338,7 +399,13 @@ export class ResumenStockComponent implements OnInit, OnDestroy {
    * Cargar todos los resúmenes de productos
    */
   private loadTodosLosResumenes(): void {
+    if (this.isLoadingResumenes()) {
+      console.log('Ya se están cargando resúmenes, saltando...');
+      return;
+    }
+
     const todosLosIds = this.productos().map(p => p.id);
+    console.log('Cargando todos los resúmenes para', todosLosIds.length, 'productos');
     this.loadResumenesParaProductos(todosLosIds);
   }
 
@@ -474,12 +541,34 @@ export class ResumenStockComponent implements OnInit, OnDestroy {
    * Cambiar ordenamiento
    */
   cambiarOrden(campo: string): void {
+    console.log('Cambiando orden por:', campo);
+
     if (this.sortField() === campo) {
-      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+      const newDirection = this.sortDirection() === 'asc' ? 'desc' : 'asc';
+      this.sortDirection.set(newDirection);
+      console.log('Nueva dirección:', newDirection);
     } else {
       this.sortField.set(campo);
       this.sortDirection.set('asc');
+      console.log('Nuevo campo:', campo, 'dirección: asc');
     }
+
+    // Triggerar actualización de computed
+    setTimeout(() => {
+      console.log('Productos después de reordenar:', this.resumenesProductosFiltrados().length);
+    }, 100);
+  }
+
+  /**
+   * Limpiar todos los filtros
+   */
+  limpiarFiltros(): void {
+    this.filtrosForm.patchValue({
+      busqueda: '',
+      estadoStock: 'TODOS',
+      soloInconsistentes: false
+    });
+    console.log('Filtros limpiados');
   }
 
   /**
