@@ -1,1 +1,386 @@
-<p>movimientos-estadisticas works!</p>
+<!-- Container principal -->
+<div class="min-h-screen bg-neutral-50 p-6">
+
+  <!-- Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-bold text-neutral-900">Estadísticas de Movimientos</h1>
+        <p class="text-neutral-600 mt-2">Análisis detallado de entradas y salidas de inventario</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        @if (canViewAllData()) {
+          <button
+            (click)="exportarEstadisticas()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center gap-2"
+            [disabled]="!estadisticas()">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            Exportar
+          </button>
+        }
+
+        <button
+          (click)="recargarDatos()"
+          class="px-4 py-2 bg-neutral-600 text-white rounded-lg hover:bg-neutral-700 transition-colors duration-200 flex items-center gap-2"
+          [disabled]="isLoadingEstadisticas()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" [ngClass]="{'animate-spin': isLoadingEstadisticas()}">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+          </svg>
+          Actualizar
+        </button>
+
+        <button
+          (click)="crearNuevoMovimiento()"
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          Nuevo Movimiento
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading inicial -->
+  @if (isLoadingProductos() || isLoadingMovimientos()) {
+    <div class="flex items-center justify-center py-20">
+      <div class="text-center">
+        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <p class="mt-4 text-neutral-600">Cargando datos...</p>
+      </div>
+    </div>
+  } @else {
+
+    <!-- Filtros y controles -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+      <!-- Panel de filtros rápidos -->
+      <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+        <h3 class="text-lg font-semibold text-neutral-900 mb-4">Filtros Rápidos</h3>
+
+        <form [formGroup]="filtrosForm" class="space-y-4">
+          <!-- Período rápido -->
+          <div>
+            <label class="block text-sm font-medium text-neutral-700 mb-2">Período</label>
+            <select formControlName="periodoRapido" class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="hoy">Hoy</option>
+              <option value="esta_semana">Esta semana</option>
+              <option value="este_mes">Este mes</option>
+              <option value="ultimo_mes">Último mes</option>
+              <option value="ultimos_3_meses">Últimos 3 meses</option>
+              <option value="este_año">Este año</option>
+            </select>
+          </div>
+
+          <!-- Opciones de visualización -->
+          <div class="space-y-3">
+            <label class="block text-sm font-medium text-neutral-700">Mostrar en gráficas</label>
+
+            <div class="flex items-center">
+              <input type="checkbox" formControlName="incluirEntradas" id="incluirEntradas" class="rounded border-neutral-300 text-green-600 focus:ring-green-500">
+              <label for="incluirEntradas" class="ml-2 text-sm text-neutral-700">Entradas</label>
+            </div>
+
+            <div class="flex items-center">
+              <input type="checkbox" formControlName="incluirSalidas" id="incluirSalidas" class="rounded border-neutral-300 text-red-600 focus:ring-red-500">
+              <label for="incluirSalidas" class="ml-2 text-sm text-neutral-700">Salidas</label>
+            </div>
+
+            <div class="flex items-center">
+              <input type="checkbox" formControlName="verTendencia" id="verTendencia" class="rounded border-neutral-300 text-blue-600 focus:ring-blue-500">
+              <label for="verTendencia" class="ml-2 text-sm text-neutral-700">Mostrar tendencia temporal</label>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Panel de rango de fechas -->
+      <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+        <h3 class="text-lg font-semibold text-neutral-900 mb-4">Rango de Fechas Personalizado</h3>
+
+        <form [formGroup]="rangoFechasForm" class="space-y-4">
+          <div>
+            <label for="fechaInicio" class="block text-sm font-medium text-neutral-700 mb-2">Fecha y hora de inicio</label>
+            <input
+              type="datetime-local"
+              id="fechaInicio"
+              formControlName="fechaInicio"
+              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+
+          <div>
+            <label for="fechaFin" class="block text-sm font-medium text-neutral-700 mb-2">Fecha y hora de fin</label>
+            <input
+              type="datetime-local"
+              id="fechaFin"
+              formControlName="fechaFin"
+              class="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+
+          @if (rangoFechasForm.invalid && rangoFechasForm.touched) {
+            <div class="text-sm text-red-600">
+              Por favor, selecciona un rango de fechas válido.
+            </div>
+          }
+        </form>
+      </div>
+    </div>
+
+    <!-- Estadísticas principales -->
+    @if (estadisticas()) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+        <!-- Total movimientos -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-neutral-600">Total Movimientos</p>
+              <p class="text-3xl font-bold text-neutral-900">{{ formatNumber(estadisticas()!.totalMovimientos) }}</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs text-neutral-500 mt-2">
+            Período: {{ formatDate(estadisticas()!.fechaInicio) }} - {{ formatDate(estadisticas()!.fechaFin) }}
+          </p>
+        </div>
+
+        <!-- Total entradas -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-neutral-600">Entradas</p>
+              <p class="text-3xl font-bold text-green-600">{{ formatNumber(estadisticas()!.cantidadEntradas) }}</p>
+            </div>
+            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4l-8 8h16l-8-8z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs text-neutral-500 mt-2">
+            {{ formatNumber(estadisticas()!.unidadesEntradas) }} unidades • {{ getPorcentajeMovimientos('entradas') }}%
+          </p>
+        </div>
+
+        <!-- Total salidas -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-neutral-600">Salidas</p>
+              <p class="text-3xl font-bold text-red-600">{{ formatNumber(estadisticas()!.cantidadSalidas) }}</p>
+            </div>
+            <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20l8-8H4l8 8z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20V4"/>
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs text-neutral-500 mt-2">
+            {{ formatNumber(estadisticas()!.unidadesSalidas) }} unidades • {{ getPorcentajeMovimientos('salidas') }}%
+          </p>
+        </div>
+
+        <!-- Diferencia neta -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-neutral-600">Diferencia Neta</p>
+              <p class="text-3xl font-bold" [ngClass]="getDiferenciaNetaClass()">
+                {{ estadisticas()!.diferenciaNeta >= 0 ? '+' : '' }}{{ formatNumber(estadisticas()!.diferenciaNeta) }}
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-full flex items-center justify-center"
+                 [ngClass]="estadisticas()!.diferenciaNeta >= 0 ? 'bg-green-100' : 'bg-red-100'">
+              <svg class="w-6 h-6" [ngClass]="estadisticas()!.diferenciaNeta >= 0 ? 'text-green-600' : 'text-red-600'" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                @if (estadisticas()!.diferenciaNeta >= 0) {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"/>
+                } @else {
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"/>
+                }
+              </svg>
+            </div>
+          </div>
+          <p class="text-xs text-neutral-500 mt-2">
+            Unidades {{ estadisticas()!.diferenciaNeta >= 0 ? 'ganadas' : 'perdidas' }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Gráficas -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+        <!-- Gráfica de movimientos por tipo -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <div class="h-80">
+            <canvas
+              baseChart
+              #chartMovimientos
+              [data]="chartMovimientosData"
+              [options]="chartMovimientosOptions"
+              type="bar">
+            </canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica circular de distribución -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <div class="h-80">
+            <canvas
+              baseChart
+              #chartTipos
+              [data]="chartTiposData"
+              [options]="chartTiposOptions"
+              type="doughnut">
+            </canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica de volumen de unidades -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <div class="h-80">
+            <canvas
+              baseChart
+              #chartUnidades
+              [data]="chartUnidadesData"
+              [options]="chartUnidadesOptions"
+              type="bar">
+            </canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica de tendencia temporal -->
+        @if (showTrendChart()) {
+          <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+            <div class="h-80">
+              <canvas
+                baseChart
+                #chartTendencia
+                [data]="chartTendenciaData"
+                [options]="chartTendenciaOptions"
+                type="line">
+              </canvas>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Información adicional -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+        <!-- Resumen de actividad -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-4">Resumen de Actividad</h3>
+
+          <div class="space-y-4">
+            <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+              <span class="text-neutral-600">Porcentaje de Entradas:</span>
+              <span class="font-semibold text-green-600">{{ estadisticas()!.porcentajeEntradas.toFixed(1) }}%</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+              <span class="text-neutral-600">Porcentaje de Salidas:</span>
+              <span class="font-semibold text-red-600">{{ estadisticas()!.porcentajeSalidas.toFixed(1) }}%</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+              <span class="text-neutral-600">Unidades de Entrada:</span>
+              <span class="font-semibold text-green-600">{{ formatNumber(estadisticas()!.unidadesEntradas) }}</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2 border-b border-neutral-100">
+              <span class="text-neutral-600">Unidades de Salida:</span>
+              <span class="font-semibold text-red-600">{{ formatNumber(estadisticas()!.unidadesSalidas) }}</span>
+            </div>
+
+            <div class="flex justify-between items-center py-2">
+              <span class="text-neutral-600">Balance de Unidades:</span>
+              <span class="font-bold" [ngClass]="getDiferenciaNetaClass()">
+                {{ estadisticas()!.diferenciaNeta >= 0 ? '+' : '' }}{{ formatNumber(estadisticas()!.diferenciaNeta) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div class="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
+          <h3 class="text-lg font-semibold text-neutral-900 mb-4">Acciones Rápidas</h3>
+
+          <div class="space-y-3">
+            <button
+              (click)="verTodosLosMovimientos()"
+              class="w-full px-4 py-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 flex items-center gap-3">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              <span>Ver todos los movimientos</span>
+            </button>
+
+            <button
+              (click)="crearNuevoMovimiento()"
+              class="w-full px-4 py-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors duration-200 flex items-center gap-3">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span>Registrar nuevo movimiento</span>
+            </button>
+
+            <button
+              (click)="router.navigate(['/movimientos/historial'])"
+              class="w-full px-4 py-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors duration-200 flex items-center gap-3">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <span>Ver historial detallado</span>
+            </button>
+
+            @if (canViewAllData()) {
+              <button
+                (click)="router.navigate(['/movimientos/reportes'])"
+                class="w-full px-4 py-3 bg-orange-50 text-orange-700 rounded-lg hover:bg-orange-100 transition-colors duration-200 flex items-center gap-3">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                <span>Generar reportes</span>
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+
+    } @else if (isLoadingEstadisticas()) {
+      <!-- Loading estadísticas -->
+      <div class="flex items-center justify-center py-20">
+        <div class="text-center">
+          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <p class="mt-4 text-neutral-600">Cargando estadísticas...</p>
+        </div>
+      </div>
+    }
+
+    <!-- Error state -->
+    @if (error()) {
+      <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <svg class="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <h3 class="text-lg font-semibold text-red-800 mb-2">Error al cargar estadísticas</h3>
+        <p class="text-red-600 mb-4">{{ error() }}</p>
+        <button
+          (click)="recargarDatos()"
+          class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+          Intentar de nuevo
+        </button>
+      </div>
+    }
+
+  }
+</div>
