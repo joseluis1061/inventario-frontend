@@ -70,7 +70,9 @@ export class MovimientosEstadisticasComponent implements OnInit, OnDestroy {
   isManager = computed(() => this.authService.isManagerOrAbove());
   canViewAllData = computed(() => this.authService.isManagerOrAbove());
   showTrendChart = computed(() => {
-    return this.filtrosForm?.get('verTendencia')?.value === true;
+    if (!this.filtrosForm) return true;
+    const control = this.filtrosForm.get('verTendencia');
+    return control ? control.value === true : true;
   });
 
   // ===== FORMULARIOS =====
@@ -268,6 +270,12 @@ export class MovimientosEstadisticasComponent implements OnInit, OnDestroy {
       incluirSalidas: [true],
       verTendencia: [true]
     });
+
+    // Asegurar que los filtros estén listos
+    console.log('Formularios inicializados:', {
+      rangoFechas: this.rangoFechasForm.value,
+      filtros: this.filtrosForm.value
+    });
   }
 
   /**
@@ -303,7 +311,7 @@ export class MovimientosEstadisticasComponent implements OnInit, OnDestroy {
    */
   private setupFormSubscriptions(): void {
     // Cambios en período rápido
-    this.filtrosForm.get('periodoRapido')?.valueChanges
+    this.filtrosForm.get('periodoRapido')!.valueChanges
       .pipe(
         takeUntil(this.destroy$),
         debounceTime(300),
@@ -334,11 +342,53 @@ export class MovimientosEstadisticasComponent implements OnInit, OnDestroy {
     this.filtrosForm.valueChanges
       .pipe(
         takeUntil(this.destroy$),
-        debounceTime(300)
+        debounceTime(300),
+        distinctUntilChanged()
       )
-      .subscribe(() => {
-        this.updateCharts();
+      .subscribe((filtros) => {
+        console.log('Filtros cambiados:', filtros); // Para debug
+        this.applyVisualizationFilters();
       });
+  }
+
+  /**
+   * Aplicar filtros de visualización sin recargar datos
+   */
+  private applyVisualizationFilters(): void {
+    const stats = this.estadisticas();
+    const filtros = this.filtrosForm.value;
+
+    console.log('Aplicando filtros:', { stats, filtros }); // Debug
+
+    if (!stats || !filtros) {
+      console.log('No hay stats o filtros disponibles');
+      return;
+    }
+
+    // Actualizar datos de gráficas según filtros
+    this.chartMovimientosData.datasets[0].data = [
+      filtros.incluirEntradas ? stats.cantidadEntradas : 0,
+      filtros.incluirSalidas ? stats.cantidadSalidas : 0
+    ];
+
+    this.chartTiposData.datasets[0].data = [
+      filtros.incluirEntradas ? stats.cantidadEntradas : 0,
+      filtros.incluirSalidas ? stats.cantidadSalidas : 0
+    ];
+
+    this.chartUnidadesData.datasets[0].data = [
+      filtros.incluirEntradas ? stats.unidadesEntradas : 0,
+      filtros.incluirSalidas ? stats.unidadesSalidas : 0
+    ];
+
+    console.log('Datos actualizados:', {
+      movimientos: this.chartMovimientosData.datasets[0].data,
+      tipos: this.chartTiposData.datasets[0].data,
+      unidades: this.chartUnidadesData.datasets[0].data
+    });
+
+    // Forzar actualización de gráficas
+    setTimeout(() => this.forceChartsUpdate(), 50);
   }
 
   // ===== MÉTODOS PARA CARGAR DATOS =====
@@ -367,10 +417,15 @@ export class MovimientosEstadisticasComponent implements OnInit, OnDestroy {
       .subscribe(estadisticas => {
         this.isLoadingEstadisticas.set(false);
         this.estadisticas.set(estadisticas);
-        this.updateCharts();
         this.generateTrendData();
-        // Forzar actualización después de un breve delay
-        setTimeout(() => this.forceChartsUpdate(), 300);
+
+        // Cargar datos iniciales en las gráficas
+        this.updateCharts();
+
+        // Aplicar filtros después de un delay más largo
+        setTimeout(() => this.applyVisualizationFilters(), 500);
+        // Debug para verificar estado
+        setTimeout(() => this.debugChartStates(), 1000);
       });
   }
 
@@ -379,7 +434,7 @@ export class MovimientosEstadisticasComponent implements OnInit, OnDestroy {
    */
   private updateCharts(): void {
     const stats = this.estadisticas();
-    const filtros = this.filtrosForm?.value;
+    const filtros = this.filtrosForm.value;
 
     if (!stats || !filtros) return;
 
@@ -418,29 +473,59 @@ export class MovimientosEstadisticasComponent implements OnInit, OnDestroy {
   * Forzar actualización de gráficas con verificación
   */
   private forceChartsUpdate(): void {
+    console.log('Forzando actualización de gráficas...');
+
     // Usar requestAnimationFrame para asegurar que el DOM esté listo
     requestAnimationFrame(() => {
       setTimeout(() => {
         if (this.chartMovimientos?.chart) {
           this.chartMovimientos.chart.data = this.chartMovimientosData;
-          this.chartMovimientos.chart.update('none');
+          this.chartMovimientos.chart.update('active');
+          console.log('Chart movimientos actualizado');
         }
 
         if (this.chartTipos?.chart) {
           this.chartTipos.chart.data = this.chartTiposData;
-          this.chartTipos.chart.update('none');
+          this.chartTipos.chart.update('active');
+          console.log('Chart tipos actualizado');
         }
 
         if (this.chartUnidades?.chart) {
           this.chartUnidades.chart.data = this.chartUnidadesData;
-          this.chartUnidades.chart.update('none');
+          this.chartUnidades.chart.update('active');
+          console.log('Chart unidades actualizado');
         }
 
         if (this.chartTendencia?.chart) {
           this.chartTendencia.chart.data = this.chartTendenciaData;
-          this.chartTendencia.chart.update('none');
+          this.chartTendencia.chart.update('active');
+          console.log('Chart tendencia actualizado');
         }
-      }, 50);
+      }, 100);
+    });
+  }
+
+  /**
+   * Método para verificar el estado de las gráficas (debug)
+   */
+  private debugChartStates(): void {
+    console.log('Estado de las gráficas:', {
+      movimientos: {
+        existe: !!this.chartMovimientos,
+        chart: !!this.chartMovimientos?.chart,
+        data: this.chartMovimientosData.datasets[0].data
+      },
+      tipos: {
+        existe: !!this.chartTipos,
+        chart: !!this.chartTipos?.chart,
+        data: this.chartTiposData.datasets[0].data
+      },
+      unidades: {
+        existe: !!this.chartUnidades,
+        chart: !!this.chartUnidades?.chart,
+        data: this.chartUnidadesData.datasets[0].data
+      },
+      estadisticas: this.estadisticas()
     });
   }
 
