@@ -79,10 +79,10 @@
         <span class="font-medium">Movimientos</span>
       </a>
 
-      <!-- Reportes (Solo gerente+) -->
+      <!-- Reportes (Solo gerente+) /reportes-->
       @if (isManagerOrAbove()) {
         <a
-          routerLink="/reportes"
+          routerLink="/movimientos/resumen-stock"
           routerLinkActive="bg-blue-50 text-blue-700 border-blue-200"
           class="flex items-center space-x-3 px-3 py-2 rounded-lg text-neutral-700 hover:bg-neutral-100 transition-all duration-200 border border-transparent"
         >
