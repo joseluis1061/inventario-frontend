@@ -32,7 +32,7 @@ export const managerGuard: CanActivateFn = (
         return true;
       } else {
         console.log('❌ ManagerGuard: Usuario no tiene permisos de gerente');
-        router.navigate(['/dashboard'], {
+        router.navigate(['/movimientos'], { //dashboard
           queryParams: {
             error: 'manager_required',
             message: 'Se requieren permisos de gerente o administrador'

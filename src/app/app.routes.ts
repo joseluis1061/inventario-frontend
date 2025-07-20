@@ -6,7 +6,7 @@ export const routes: Routes = [
   // Redirect root
   {
     path: '',
-    redirectTo: '/dashboard',
+    redirectTo: '/movimientos',
     pathMatch: 'full'
   },
 

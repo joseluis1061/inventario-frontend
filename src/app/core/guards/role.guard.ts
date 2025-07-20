@@ -48,7 +48,7 @@ export const roleGuard: CanActivateFn = (
         return true;
       } else {
         console.log('❌ RoleGuard: Sin permisos suficientes, redirigiendo');
-        router.navigate(['/dashboard'], {
+        router.navigate(['/movimientos'], { //dashboard
           queryParams: {
             error: 'insufficient_permissions',
             requiredRole: requiredRoles.join(',')

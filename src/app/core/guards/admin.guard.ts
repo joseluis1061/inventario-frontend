@@ -32,7 +32,7 @@ export const adminGuard: CanActivateFn = (
         return true;
       } else {
         console.log('❌ AdminGuard: Usuario no es administrador, acceso denegado');
-        router.navigate(['/dashboard'], {
+        router.navigate(['/movimientos'], { //dashboard
           queryParams: {
             error: 'admin_required',
             message: 'Se requieren permisos de administrador'

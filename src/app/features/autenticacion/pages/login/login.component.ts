@@ -23,11 +23,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly destroy$ = new Subject<void>();
 
-  returnUrl: string = '/dashboard';
+  returnUrl: string = '/movimientos'; // dashboard
   isLoading$ = inject(LoadingService).loading$;
 
   ngOnInit(): void {
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/movimientos'; // dashboard
     this.checkExistingAuth();
   }
 

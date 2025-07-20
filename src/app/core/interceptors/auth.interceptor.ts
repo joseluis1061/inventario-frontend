@@ -82,7 +82,7 @@ function handleHttpError(
   if (error.status === 403) {
     console.warn('🚫 Acceso denegado - Sin permisos suficientes');
     notificationService.permissionDenied();
-    router.navigate(['/dashboard']); // Redirigir a página segura
+    router.navigate(['/movimientos']); // Redirigir a página segura dashboard
     return throwError(() => error);
   }
 

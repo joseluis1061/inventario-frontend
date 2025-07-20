@@ -25,7 +25,7 @@ export const noAuthGuard: CanActivateFn = (
         return true;
       } else {
         console.log('❌ NoAuthGuard: Usuario ya autenticado, redirigiendo a dashboard');
-        router.navigate(['/dashboard']);
+        router.navigate(['/movimientos']); // dashboard
         return false;
       }
     })
