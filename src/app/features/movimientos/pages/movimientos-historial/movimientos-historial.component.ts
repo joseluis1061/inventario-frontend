@@ -33,6 +33,7 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly destroy$ = new Subject<void>();
+  showExportMenu = signal<boolean>(false);
 
   // Signals para estado del componente
   historialData = signal<MovimientoHistorialResponse | null>(null);
@@ -101,6 +102,13 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  /**
+   * Alternar menú de exportación
+   */
+  toggleExportMenu(): void {
+    this.showExportMenu.set(!this.showExportMenu());
   }
 
   /**
@@ -396,17 +404,106 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
   /**
    * Exportar datos (simulado)
    */
+
   exportarDatos(formato: 'excel' | 'pdf' | 'csv'): void {
     if (!this.canExport()) return;
 
     this.exportando.set(true);
 
-    // Simular proceso de exportación
-    setTimeout(() => {
-      console.log(`Exportando historial en formato ${formato}`);
-      // Aquí iría la lógica real de exportación
-      this.exportando.set(false);
-    }, 2000);
+    // Obtener los datos actuales con filtros aplicados
+    const params: MovimientoHistorialParams = {
+      pagina: 0, // Exportar desde la primera página
+      tamaño: this.totalElements() // Exportar todos los elementos
+    };
+
+    this.movimientosService.obtenerHistorial(params)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(error => {
+          console.error('Error al obtener datos para exportar:', error);
+          this.exportando.set(false);
+          return of(null);
+        })
+      )
+      .subscribe(historial => {
+        if (historial && historial.content.length > 0) {
+          switch (formato) {
+            case 'excel':
+              this.exportarExcel(historial.content);
+              break;
+            case 'pdf':
+              this.exportarPDF(historial.content);
+              break;
+            case 'csv':
+              this.exportarCSV(historial.content);
+              break;
+          }
+        }
+        this.exportando.set(false);
+      });
+  }
+
+  /**
+   * Exportar a Excel
+   */
+  private exportarExcel(movimientos: MovimientoResponse[]): void {
+    // Implementar exportación a Excel usando una librería como xlsx
+    console.log('Exportando a Excel:', movimientos);
+    // TODO: Implementar con librería xlsx
+  }
+
+  /**
+   * Exportar a PDF
+   */
+  private exportarPDF(movimientos: MovimientoResponse[]): void {
+    // Implementar exportación a PDF usando una librería como jsPDF
+    console.log('Exportando a PDF:', movimientos);
+    // TODO: Implementar con librería jsPDF
+  }
+
+  /**
+   * Exportar a CSV
+   */
+  private exportarCSV(movimientos: MovimientoResponse[]): void {
+    const headers = [
+      'ID',
+      'Fecha',
+      'Tipo',
+      'Producto',
+      'Cantidad',
+      'Motivo',
+      'Usuario',
+      'Valor',
+      'Impacto'
+    ];
+
+    const data = movimientos.map(mov => [
+      mov.id,
+      this.formatearFecha(mov.fecha),
+      mov.tipoMovimiento,
+      mov.producto.nombre,
+      mov.cantidad,
+      mov.motivo,
+      mov.usuario.nombreCompleto,
+      mov.valorMovimiento,
+      mov.nivelImpacto
+    ]);
+
+    const csvContent = [headers, ...data]
+      .map(row => row.map(field => `"${field}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', `movimientos_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   /**
