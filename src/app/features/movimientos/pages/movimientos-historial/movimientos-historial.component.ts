@@ -850,6 +850,13 @@ export class MovimientosHistorialComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navegación a análisis por producto
+   */
+  verPorProducto(): void {
+    this.router.navigate(['/movimientos/por-producto']);
+  }
+
+  /**
    * Obtener información del producto por ID
    */
   getProductoPorId(id: number): ProductoResponse | undefined {

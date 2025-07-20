@@ -36,6 +36,17 @@
         Historial
       </button>
 
+      <!-- Botón Por Producto -->
+      <button
+        class="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+        (click)="verPorProducto()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M9 5l3-3 3 3"/>
+        </svg>
+        Por Producto
+      </button>
+
       <!-- Botón Dashboard Recientes -->
       <button
         class="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md focus:ring-2 focus:ring-green-500 focus:ring-offset-2"

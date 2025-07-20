@@ -290,6 +290,13 @@ export class MovimientosListComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Navegación a análisis por producto
+   */
+  verPorProducto(): void {
+    this.router.navigate(['/movimientos/por-producto']);
+  }
+
+  /**
    * Navegación a historial avanzado
    */
   verHistorial(): void {
